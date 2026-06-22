@@ -49,7 +49,7 @@ export default function TopNav() {
         </Link>
 
         {/* Desktop menu */}
-        <ul className="hidden items-stretch lg:flex">
+        <ul className="hidden items-stretch nav:flex">
           {nav.map((item) => (
             <li key={item.href} className="group relative flex items-stretch">
               <Link
@@ -86,7 +86,7 @@ export default function TopNav() {
         {/* Mobile toggle */}
         <button
           type="button"
-          className="inline-flex items-center justify-center p-2 text-white lg:hidden"
+          className="inline-flex items-center justify-center p-2 text-white nav:hidden"
           aria-label="Toggle navigation"
           aria-expanded={mobileOpen}
           onClick={() => setMobileOpen((o) => !o)}
@@ -103,7 +103,7 @@ export default function TopNav() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <ul className={`${DROPDOWN_BLUE} lg:hidden`}>
+        <ul className={`${DROPDOWN_BLUE} nav:hidden`}>
           {nav.map((item) => (
             <li key={item.href} className="border-b border-white/15">
               <div className="flex items-center justify-between">

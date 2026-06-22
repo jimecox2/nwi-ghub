@@ -5,7 +5,12 @@ module.exports = {
     "./components/**/*.{js,jsx,ts,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      screens: {
+        // Breakpoint at which the desktop nav appears / hamburger hides
+        nav: "800px",
+      },
+    },
   },
   plugins: [require("@tailwindcss/typography")],
 };
