@@ -1,0 +1,10 @@
+<!--#include file="ssi_header.asp"-->
+<!-- Start HTML Content -->
+
+<H3><FONT face=Verdana size=2>Health Care</FONT></H3>
+<P><FONT face=Verdana>The nearest hospital in remote communities is often a long drive or a air flight away. B<SPAN lang=EN-GB style="COLOR: black">roadband</SPAN><SPAN style="COLOR: black"> video conferencing</SPAN><SPAN lang=EN-GB style="COLOR: black"> could mean the difference between life and </SPAN><SPAN style="COLOR: black">death. B</SPAN><SPAN lang=EN-GB style="COLOR: black">roadband service would allow access to video conferencing for both diagnostic and educational purposes.</SPAN><SPAN style="COLOR: black"> </SPAN><SPAN lang=EN-GB style="COLOR: black">It would allow retrieval of medical history information that could be critical in treatment.&nbsp; Up-to-date practises and procedures that are essential in providing the best health care possible could be easily and expediently accessed.</SPAN> </FONT></P>
+<P class=MsoNormal style="BORDER-RIGHT: medium none; PADDING-RIGHT: 0cm; BORDER-TOP: medium none; PADDING-LEFT: 0cm; PADDING-BOTTOM: 0cm; BORDER-LEFT: medium none; PADDING-TOP: 0cm; BORDER-BOTTOM: medium none; TEXT-ALIGN: justify"><FONT face=Verdana>&nbsp;The high cost of&nbsp; Broadband usually stops a video conferencing project in its tracks. Northern Wireless knows how you can purchase a solution and share the T1 costs amongst the community in a business case. We can help with your business plan, borrowing money and project management.</FONT></P>
+<P class=MsoNormal style="BORDER-RIGHT: medium none; PADDING-RIGHT: 0cm; BORDER-TOP: medium none; PADDING-LEFT: 0cm; PADDING-BOTTOM: 0cm; BORDER-LEFT: medium none; PADDING-TOP: 0cm; BORDER-BOTTOM: medium none; TEXT-ALIGN: justify"><FONT face=Verdana>&nbsp;Northern Wireless recommends a T1 line or LAN extension from Bell Canada in combination with our "last mile" solution for delivery of the bandwidth. FedNor can help fund the supply of the video conferencing equipment. We can put the solution in place for you.</FONT></P>
+
+<!-- End HTML Content -->
+<!--#include file="ssi_footer.asp"-->

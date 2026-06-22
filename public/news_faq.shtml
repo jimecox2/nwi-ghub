@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<TITLE>Atikokan Information Solutions</TITLE>
+
+<SCRIPT LANGUAGE="JavaScript">
+
+dm=""; // stops browser preview from breaking when SSIs are not being parsed.
+</SCRIPT>
+<!--#include file="menu.javascript" -->
+<LINK rel="stylesheet" type="text/css" href="nwon1.css">
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#008000" ALINK="#FF0000" VLINK="#004000" BACKGROUND="nwon_bg.gif" onLoad="window.defaultStatus=dm;loaded=true;">
+
+
+
+<table width="590" border="0" cellspacing="0" cellpadding="0">
+<tr>
+	<td valign="TOP">
+	<img src="blank.gif" width="153" height="1" alt border="0">
+	<!--#include file="menu.toolbar" --></td>
+	<td valign="TOP">
+	<img src="images/ais_small.gif" width=164 height=69 alt="" border="0"><br>
+	<!--All content to go here-->
+	<h2>News@nwon</h2>
+	<h2>What Sets Us Apart</h2>	
+<ol>
+<li>Digital Dial-up Lines
+<li>56Kbps Modem Support,
+<li>Bell Canada T1 Internet Connection
+<li>Award winning Rascom Servers
+<li>Microsoft Windows NT Servers
+<li>Microsoft IIS Web Servers
+<li>Database Driven Websites</li>  </ol>
+
+<p><h2>FAQ's (Frequently Asked Questions)</h2>
+
+	<p><i>How can you be so much faster than others?</i><br><EM>Answer</EM> 
+: Digital dial-up lines and modems with direct link to Bell Internet backbone and Windows NT Server technology.</p>
+	
+	<p><i>Is your computer so much faster than others?</i><br><EM>Answer</EM> 
+: It may not be our computer that's faster but our lines from the Bell building and our lines to the internet. When you access the internet using our service your data will not be routed to Dryden, Thunder Bay etc... it will instantly be routed to the Bell internet backbone. Bell's new system is fast.</p>
+
+<p><i>Do we loose our hours if we don't use them up each month?</i><br><EM>Answer</EM> 
+: We don't look at it as though hours are being lost, we are selling monthly packages and overtime charges will apply if a customer exceeds the allotted hours. The monthly costs imposed on us by our suppliers and carriers force us to pass the costs on to the customer (you). We need a predictable and positive cash-flow for our business to survive. </p>
+
+<p>W<i>hat are your hours for technical support?</i><br>
+Answer: 9am to 9pm, 7 days per week.</p>
+
+<p>A<i>re taxes included?</i><br><EM>Answer</EM> 
+  : No. GST is extra.</p>
+
+<p><i>When can we expect a bill?</i><br><EM>Answer</EM> 
+: At the end of each month we will send an email invoice. Payment should be by cheque until we have on-line banking and automatic withdrawl systems in place. 
+</p>
+
+<p>
+<h2>Atikokan IS Background and history...</h2>
+During our annual summer visit to our home town, it became abundantly clear that Atikokan was in desperate need of quality Internet Access. Having a desire to get into this business on a larger scale, we saw Atikokan's needs as a great opportunity to get started.
+</p>
+<p>
+We started planning this venture in early September and quickly realized that it was going to be a tough business to get off the ground.  The good news was that Atikokan did have access to the high quality digital lines required for high speed dial-up access.  The bad news was the Bell zoning of the Atikokan area.  It costs roughly 3 times more to set up an ISP business in small towns such as Atikokan than it does in more populated areas. 
+</p>	
+<p>We crunched numbers and investigated all aspects of the business and came to the conclusion that this is a viable business.  We bought the equipment, ordered the lines and we will be up and running come December 15 1998. We will offer Atikokan the best local Internet service available today.  All our equipment is new and based on the most current standards.</p>
+
+<p><b>Jim Cox:</b><br> Network Administrator and Programmer, born and raised in Atikokan currently residing in Ottawa.</p>
+<p><b>Mike Cox:</b><br> Web Master, born and raised in Atikokan currently residing in Brockville Ontario.</p>
+<p><b>Pat Cox:</b><br> Business manager, born, raised and currently living in Atikokan</p>
+<p><b>Tom Cox:</b><br> Book keeper, Moved to Atikokan in 1954, been there ever since.</p>
+	<!--End of content-->
+	<!--#include file="menu.footer"-->
+	</td>
+</tr>
+</table>
+
+
+</body>
+</html>

@@ -1,0 +1,66 @@
+p,td,body,li {
+	font : 10pt Verdana, Geneva, Arial, Helvetica, sans-serif;
+}
+
+.prodName {	
+	color : #003366;
+	text-decoration : none;
+	font-size : 12pt;
+	font-weight : bold;
+	font-family : Arial, Helvetica, sans-serif;
+	}
+.prodDesc {
+	color : #003366;
+	text-decoration : none;
+	font-size : 9pt;
+	font-family : Arial, Helvetica, sans-serif;
+	}
+
+
+A.menulink {
+display: block;
+width: 150px;
+text-align: left;
+text-decoration: none;
+BORDER: none;
+padding-right : 4px;
+padding-top : 1px;
+padding-bottom : 1px;
+padding-left : 4px;
+	color : #000099;
+	text-decoration : none;
+	font-size : 9pt;
+	font-family : Arial, Helvetica, sans-serif;
+}
+
+A.menulink:hover {
+color: #990000;
+background-color:#ffffff;
+}
+A.tmenulink {
+display: block;
+width: 150px;
+text-decoration: none;
+font-family:verdana;
+font-weight:bold;
+BORDER: none;
+text-align: left;
+padding-right : 4px;
+padding-top : 1px;
+padding-bottom : 1px;
+padding-left : 4px;
+	color : #ffffff;
+	font-size : 10pt;
+	font-family : Arial, Helvetica, sans-serif;
+	font-weight : bold;
+
+}
+
+A.tmenulink:hover {
+color: #000000;
+background-color:#ffffff;
+}
+.tooltiptitle{COLOR: #ffffff; TEXT-DECORATION: none; CURSOR: Default; font-family: arial; font-weight: bold; font-size: 8pt}
+.tooltipcontent{COLOR: #000000; TEXT-DECORATION: none; CURSOR: Default; font-family: arial; font-size: 8pt}
+
+#ToolTip{position:absolute; width: 100px; top: 0px; left: 0px; z-index:4; visibility:hidden;}

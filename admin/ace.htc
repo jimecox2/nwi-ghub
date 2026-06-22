@@ -1,0 +1,2882 @@
+<public:component tagName=AdvContentEditor>
+	<public:defaults viewLinkContent/>
+	<public:attach event="oncontentready" onevent="initEditor();"/>
+	<public:property name="content"	id="content" put="putContent" get="getContent"/>
+	
+	<public:property name="editorWidth"	id="editorWidth" put="putEditorWidth"/>
+	<public:property name="editorHeight" id="editorHeight" put="putEditorHeight"/>
+		
+	<public:property name="baseUrl"	id="baseUrl" put="putBaseUrl"/>
+	<public:property name="baseUrlNew"	id="baseUrlNew" put="putBaseUrlNew"/>
+	<public:property name="useSave"	id="useSave" put="putUseSave"/>
+	
+	<public:event name="onSave" ID="contentSave" />	
+	
+	<public:event name="onImgLookupOpen" ID="imgLookupOpen" />	
+	<public:property name="imageProperties"	id="imageProperties" get="getImageProperties"/>
+	
+	<public:method name="checkImage" />
+	<public:method name="UpdateImage" />
+	<public:method name="InsertImage" />
+	<public:method name="setPosition" />
+</public:component>
+<HTML>
+<HEAD>
+
+<!-- Stylesheet Feature -->
+<link id="DocStyle" rel="stylesheet" href="ace.css" type="text/css">
+
+<style>
+select
+	{
+	height: 22px; 
+	top:2;
+	font:8pt verdana,arial,sans-serif
+	}
+.bar
+	{
+	BORDER-TOP: #99ccff 1px solid; BACKGROUND: #316AC5; WIDTH: 100%; BORDER-BOTTOM: #000000 1px solid; HEIGHT: 20px
+	}
+.tblCoolbar 
+	{ 
+	background-color: #E2E2E2; padding:1px; color:menutext; 
+	border-width:1px; border-style:solid; 
+	border-color:threedhighlight threedshadow threedshadow threedhighlight;
+	}
+.editArea
+	{
+	border : 1px solid lightgrey;
+	padding : 0, 0, 0, 0;
+	background-color : White;
+	overflow : auto;
+	}
+.editAreaTmp
+	{
+	height : 1px;
+	width : 1px;
+	overflow : auto;
+	}
+td
+	{
+	font:8pt verdana,arial,sans-serif
+	}
+div
+	{
+	font:10pt tahoma,arial,sans-serif
+	}
+</style>
+
+<script language=javascript>
+var intEditorWidth;
+var intEditorHeight;
+function putEditorWidth(vValue) 
+	{
+	intEditorWidth = vValue; 
+	
+
+	idContent.style.width= intEditorWidth;
+	idToolbar.style.width=intEditorWidth
+	idToolbarBottom.style.width=intEditorWidth		
+	}
+function putEditorHeight(vValue) 
+	{
+	intEditorHeight = vValue; 
+	
+	idContent.style.height= intEditorHeight;
+	}
+	
+function initEditor()
+	{
+	setPosition() 
+	window.onresize = setPosition
+	
+	idContent.contentEditable='true';
+		
+    InitStyle()//must be placed before unselectable = "on"
+    
+	var arrHTMLFormatBlock = new Array(
+		"<HTML><h1>.</h1></HTML>",
+		"<HTML><h2>.</h2></HTML>",
+		"<HTML><h3>.</h3></HTML>",
+		"<HTML><h4>.</h4></HTML>",
+		"<HTML><h5>.</h5></HTML>",
+		"<HTML><h6>.</h6></HTML>",
+		"<HTML><pre>.</pre></HTML>",
+		"<HTML><body>.</body></HTML>")
+	var arrTagFormatBlock = new Array("H1","H2","H3","H4","H5","H6","PRE","P")
+	idContentTmp.contentEditable='true';//Tmp
+	for (i=0; i<arrTagFormatBlock.length; i++)
+		{//Tmp
+		idContentTmp.innerHTML = arrHTMLFormatBlock[i]
+		idContentTmp.focus()
+		idContentTmp.document.execCommand("SelectAll")
+		eval("id"+arrTagFormatBlock[i]).innerHTML = idContentTmp.document.queryCommandValue('FormatBlock')
+		}
+    	
+    for (i=0; i<document.all.length; i++)
+		document.all(i).unselectable = "on";
+		
+    //idContent.innerHTML = "<DIV></DIV>"  
+    
+    idContent.unselectable = "off";
+    idContentTmp.unselectable = "off";
+    idLinkURL.unselectable = "off";
+
+    document.execCommand("2D-Position", true, true);
+    document.execCommand("MultipleSelection", true, true);
+    document.execCommand("LiveResize", true, true);
+    
+    TableInit()//must be placed after unselectable = "on"
+	
+	idContent.BaseURL = "http://webdev/ContentEditor/"
+	
+	//special
+	//doCmd('JustifyLeft')
+	//btnJustifyLeft.state=document.queryCommandState('justifyleft');
+	//btnOut(btnJustifyLeft);	
+	
+	idContent.innerHTML = sContent;
+	
+	idContent.focus()
+	
+	btnSave.disabled = false
+	}
+//*************************************
+	
+var sBaseUrl;
+function putBaseUrl(vValue) 
+	{
+	sBaseUrl = vValue; 
+	}
+var sBaseUrlNew;
+function putBaseUrlNew(vValue) 
+	{
+	sBaseUrlNew = vValue; 
+	}
+
+var bUseSave;
+function putUseSave(vValue) 
+	{
+	bUseSave = vValue; 
+	if(bUseSave)
+		{
+		btnSave.style.display = "block";
+		}
+	else
+		{
+		btnSave.style.display = "none";
+		}
+	}
+	
+var sContent="";
+function putContent(vValue) 
+	{
+	sContent = vValue; 
+	idContent.innerHTML = sContent;
+	//idContent.innerHTML = vValue;
+	}
+function getContent() 
+	{
+	return idContent.innerHTML;
+	}
+
+
+
+
+
+//*********************
+function displayExternalImageBox()
+	{
+	PopupHide()
+	
+	var oEvent = createEventObject();
+	imgLookupOpen.fire(oEvent);
+	return true;	
+	}
+var arrImageProperties;
+function getImageProperties() 
+	{
+	arrImageProperties = checkImage();
+	return arrImageProperties;
+	}
+function checkImage()
+	{
+	var oSel = document.selection.createRange()
+	var sType = document.selection.type	
+	
+	if ((oSel.item) && (oSel.item(0).tagName=="IMG")) //If image is selected 
+		{
+		var arrVal = new Array(oSel.item(0).src,
+											oSel.item(0).alt,
+											oSel.item(0).align,
+											oSel.item(0).border,
+											oSel.item(0).width,
+											oSel.item(0).height,
+											oSel.item(0).hspace,
+											oSel.item(0).vspace)
+		}
+	else
+		{
+		var arrVal = new Array();
+		}
+	return arrVal;
+	}
+function UpdateImage(inpImgURL,inpImgAlt,inpImgAlign,inpImgBorder,inpImgWidth,inpImgHeight,inpHSpace,inpVSpace)
+	{
+	var oSel = document.selection.createRange()
+	var sType = document.selection.type	
+	if ((oSel.item) && (oSel.item(0).tagName=="IMG")) 
+		{
+		oSel.item(0).style.width="";
+		oSel.item(0).style.height="";
+				
+		oSel.item(0).src = inpImgURL
+		if(inpImgAlt!="")
+			oSel.item(0).alt = inpImgAlt
+		else
+			oSel.item(0).removeAttribute("alt",0)
+		oSel.item(0).align = inpImgAlign
+		oSel.item(0).border = inpImgBorder
+		if(inpImgWidth!="")
+			oSel.item(0).width = inpImgWidth
+		else
+			oSel.item(0).removeAttribute("width",0)			
+		if(inpImgHeight!="")
+			oSel.item(0).height = inpImgHeight
+		else
+			oSel.item(0).removeAttribute("height",0)			
+		if(inpHSpace!="")
+			oSel.item(0).hspace = inpHSpace
+		else
+			oSel.item(0).removeAttribute("hspace",0)			
+		if(inpVSpace!="")
+			oSel.item(0).vspace = inpVSpace
+		else
+			oSel.item(0).removeAttribute("vspace",0)			
+		}	
+	}
+function InsertImage(inpImgURL,inpImgAlt,inpImgAlign,inpImgBorder,inpImgWidth,inpImgHeight,inpHSpace,inpVSpace)
+	{
+	document.execCommand("InsertImage",false,inpImgURL);
+	var oSel = document.selection.createRange()
+	var sType = document.selection.type	
+	if ((oSel.item) && (oSel.item(0).tagName=="IMG")) 
+		{
+		if(inpImgAlt!="")
+			oSel.item(0).alt = inpImgAlt
+		oSel.item(0).align = inpImgAlign
+		oSel.item(0).border = inpImgBorder
+		if(inpImgWidth!="")
+			oSel.item(0).width = inpImgWidth 
+		if(inpImgHeight!="")
+			oSel.item(0).height = inpImgHeight
+		if(inpHSpace!="")
+			oSel.item(0).hspace = inpHSpace
+		if(inpVSpace!="")
+			oSel.item(0).vspace = inpVSpace
+		}	
+	}
+
+function Save()
+	{
+	if (displayMode == "HTML"){alert("Please uncheck 'Edit HTML'");return;}
+	var oEvent = createEventObject();
+	contentSave.fire(oEvent);	
+	}
+	
+
+function PopupHide()
+	{
+	parabox.style.display = "none"
+	fontnamebox.style.display = "none"
+	fontsizebox.style.display = "none"
+	tablebox.style.display = "none"
+	linkbox.style.display = "none"
+	fgcolorbox.style.display = "none"
+	bgcolorbox.style.display = "none"
+	stylebox.style.display = "none"
+	symbolbox.style.display = "none"
+	docbgcolorbox.style.display = "none"
+	}	
+function setPosition() 
+	{
+	if(parabox.style.display=="block")
+		{
+		parabox.style.pixelLeft = (idContent.style.pixelWidth-parabox.offsetWidth)/2
+		parabox.style.pixelTop = (idContent.style.pixelHeight-parabox.offsetHeight)/2
+		}
+	if(fontnamebox.style.display=="block")
+		{
+		fontnamebox.style.pixelLeft = (idContent.style.pixelWidth-fontnamebox.offsetWidth)/2
+		fontnamebox.style.pixelTop = (idContent.style.pixelHeight-fontnamebox.offsetHeight)/2			
+		}		
+	if(fontsizebox.style.display=="block")
+		{
+		fontsizebox.style.pixelLeft = (idContent.style.pixelWidth-fontsizebox.offsetWidth)/2
+		fontsizebox.style.pixelTop = (idContent.style.pixelHeight-fontsizebox.offsetHeight)/2				
+		}		
+	if(tablebox.style.display=="block")
+		{
+		tablebox.style.pixelLeft = (idContent.style.pixelWidth-tablebox.offsetWidth)/2
+		tablebox.style.pixelTop = (idContent.style.pixelHeight-tablebox.offsetHeight)/2			
+		}
+	if(linkbox.style.display=="block")
+		{
+		linkbox.style.pixelLeft = (idContent.style.pixelWidth-linkbox.offsetWidth)/2
+		linkbox.style.pixelTop = (idContent.style.pixelHeight-linkbox.offsetHeight)/2					
+		}
+	if(fgcolorbox.style.display=="block")
+		{
+		fgcolorbox.style.pixelLeft = (idContent.style.pixelWidth-fgcolorbox.offsetWidth)/2
+		fgcolorbox.style.pixelTop = (idContent.style.pixelHeight-fgcolorbox.offsetHeight)/2				
+		}
+	if(bgcolorbox.style.display=="block")
+		{
+		bgcolorbox.style.pixelLeft = (idContent.style.pixelWidth-bgcolorbox.offsetWidth)/2
+		bgcolorbox.style.pixelTop = (idContent.style.pixelHeight-bgcolorbox.offsetHeight)/2			
+		}
+	if(docbgcolorbox.style.display=="block")
+		{
+		docbgcolorbox.style.pixelLeft = (idContent.style.pixelWidth-docbgcolorbox.offsetWidth)/2
+		docbgcolorbox.style.pixelTop = (idContent.style.pixelHeight-docbgcolorbox.offsetHeight)/2					
+		}
+	if(stylebox.style.display=="block")
+		{
+		stylebox.style.pixelLeft = (idContent.style.pixelWidth-stylebox.offsetWidth)/2
+		stylebox.style.pixelTop = (idContent.style.pixelHeight-stylebox.offsetHeight)/2				
+		}
+	if(symbolbox.style.display=="block")
+		{
+		symbolbox.style.pixelLeft = (idContent.style.pixelWidth-symbolbox.offsetWidth)/2
+		symbolbox.style.pixelTop = (idContent.style.pixelHeight-symbolbox.offsetHeight)/2				
+		}
+	}
+
+function InsertText()
+	{
+	PopupHide()
+	
+    var oNode=document.createElement("div");
+    idContent.insertBefore(oNode);
+    
+    oNode.style.fontFamily="Tahoma";
+    oNode.innerText='Enter text here';
+    
+    oNode.style.position="absolute";
+    oNode.setActive()
+	}
+function doCmd(sCmd,sOption)
+	{
+	PopupHide()
+
+	var oSel = document.selection.createRange()
+	var sType = document.selection.type
+	var oTarget = (sType == "None" ? idContent.document : oSel)
+
+	oTarget.execCommand(sCmd, false, sOption)
+	}
+
+function document_onselectionchanged()
+	{
+	//Cut & Copy(try)
+	try
+	{
+	if(document.queryCommandEnabled('Cut'))
+		{
+		btnCut.en=true;
+		btnCut.style.pixelTop=0;//posisi enable
+		
+		btnCopy.en=true;
+		btnCopy.style.pixelTop=0;
+		}
+	else
+		{
+		btnCut.en=false;
+		btnCut.style.pixelTop=-66;//posisi disable
+		
+		btnCopy.en=false;
+		btnCopy.style.pixelTop=-66;
+		}	
+	}
+	catch(e){}
+
+	
+	//Bold, Italic, Underline
+	if(document.queryCommandEnabled('Bold'))
+		{
+		btnBold.en=true;
+		btnBold.state=document.queryCommandState('Bold');
+		btnOut(btnBold); //=>if(btn.state){btn.style.pixelTop=-88}else{btn.style.pixelTop=0}
+		}
+	else
+		{
+		btnBold.en=false;
+		btnBold.style.pixelTop=-66;
+		}
+	
+	if(document.queryCommandEnabled('Italic'))
+		{
+		btnItalic.en=true;
+		btnItalic.state=document.queryCommandState('Italic');
+		btnOut(btnItalic);
+		}
+	else
+		{
+		btnItalic.en=false;
+		btnItalic.style.pixelTop=-66;
+		}
+	if(document.queryCommandEnabled('Underline'))
+		{
+		btnUnderline.en=true;
+		btnUnderline.state=document.queryCommandState('Underline');
+		btnOut(btnUnderline);
+		}
+	else
+		{
+		btnUnderline.en=false;
+		btnUnderline.style.pixelTop=-66;
+		}
+	if(document.queryCommandEnabled('Strikethrough'))
+		{
+		btnStrikethrough.en=true;
+		btnStrikethrough.state=document.queryCommandState('Strikethrough');
+		btnOut(btnStrikethrough);
+		}
+	else
+		{
+		btnStrikethrough.en=false;
+		btnStrikethrough.style.pixelTop=-66;
+		}
+	if(document.queryCommandEnabled('Superscript'))
+		{
+		btnSuperscript.en=true;
+		btnSuperscript.state=document.queryCommandState('Superscript');
+		btnOut(btnSuperscript);
+		}
+	else
+		{
+		btnSuperscript.en=false;
+		btnSuperscript.style.pixelTop=-66;
+		}
+	if(document.queryCommandEnabled('Subscript'))
+		{
+		btnSubscript.en=true;
+		btnSubscript.state=document.queryCommandState('Subscript');
+		btnOut(btnSubscript);
+		}
+	else
+		{
+		btnSubscript.en=false;
+		btnSubscript.style.pixelTop=-66;
+		}	
+
+	
+	//Justify (try)
+	try
+	{
+	if(document.queryCommandEnabled('justifyleft'))
+		{
+		btnJustifyLeft.en=true;
+		btnJustifyLeft.state=document.queryCommandState('justifyleft');
+		btnOut(btnJustifyLeft);
+		}
+	else
+		{
+		btnJustifyLeft.en=false;
+		btnJustifyLeft.style.pixelTop=-66;
+		}
+
+	
+	if(document.queryCommandEnabled('JustifyCenter'))
+		{
+		btnJustifyCenter.en=true;
+		btnJustifyCenter.state=document.queryCommandState('JustifyCenter');
+		btnOut(btnJustifyCenter);
+		}
+	else
+		{
+		btnJustifyCenter.en=false;
+		btnJustifyCenter.style.pixelTop=-66;
+		}
+
+	if(document.queryCommandEnabled('JustifyRight'))
+		{
+		btnJustifyRight.en=true;
+		btnJustifyRight.state=document.queryCommandState('JustifyRight');
+		btnOut(btnJustifyRight);
+		}
+	else
+		{
+		btnJustifyRight.en=false;
+		btnJustifyRight.style.pixelTop=-66;
+		}		
+	if(document.queryCommandEnabled('JustifyFull'))
+		{
+		btnJustifyFull.en=true;
+		btnJustifyFull.state=document.queryCommandState('JustifyFull');
+		btnOut(btnJustifyFull);
+		}
+	else
+		{
+		btnJustifyFull.en=false;
+		btnJustifyFull.style.pixelTop=-66;
+		}				
+	}
+	catch(e){}
+
+	//Ordered & Unordered List
+	if(document.queryCommandEnabled('InsertOrderedList'))
+		{
+		btnInsertOrderedList.en=true;
+		btnInsertOrderedList.state=document.queryCommandState('InsertOrderedList');
+		btnOut(btnInsertOrderedList);
+		}
+	else
+		{
+		btnInsertOrderedList.en=false;
+		btnInsertOrderedList.style.pixelTop=-66;
+		}
+	if(document.queryCommandEnabled('InsertUnorderedList'))
+		{
+		btnInsertUnorderedList.en=true;
+		btnInsertUnorderedList.state=document.queryCommandState('InsertUnorderedList');
+		btnOut(btnInsertUnorderedList);
+		}
+	else
+		{
+		btnInsertUnorderedList.en=false;
+		btnInsertUnorderedList.style.pixelTop=-66;
+		}	
+
+	//Indent & Outdent
+	if(document.queryCommandEnabled('Indent'))
+		{
+		btnIndent.en=true;
+		btnOut(btnIndent);
+		}
+	else
+		{
+		btnIndent.en=false;
+		btnIndent.style.pixelTop=-66;
+		}
+	if(document.queryCommandEnabled('Outdent'))
+		{
+		btnOutdent.en=true;
+		btnOut(btnOutdent);
+		}
+	else
+		{
+		btnOutdent.en=false;
+		btnOutdent.style.pixelTop=-66;
+		}
+		
+	//Horizontal Line
+	if(document.queryCommandEnabled('InsertHorizontalRule'))
+		{
+		btnHorizontalLine.en = true
+		btnHorizontalLine.style.pixelTop=0;
+		}
+	else
+		{
+		btnHorizontalLine.en = false
+		btnHorizontalLine.style.pixelTop=-66;
+		}	
+
+	//Unlink
+	try
+	{
+	if(document.queryCommandEnabled('Unlink'))
+		{
+		btnUnlink.en = true
+		btnUnlink.style.pixelTop=0;
+		}
+	else
+		{
+		btnUnlink.en = false
+		btnUnlink.style.pixelTop=-66;
+		}	
+	}
+	catch(e){}
+	
+	//Image
+	if(document.queryCommandEnabled('InsertImage'))
+		{
+		btnInternalImage.en = true
+		btnInternalImage.style.pixelTop=0;
+		
+		//btnExternalImage.en = true	
+		//btnExternalImage.style.pixelTop=0;
+		}
+	else
+		{
+		btnInternalImage.en = false
+		btnInternalImage.style.pixelTop=-66;
+		
+		//btnExternalImage.en = false	
+		//btnExternalImage.style.pixelTop=-66;
+		}
+		
+	//Color
+	if(document.queryCommandEnabled('BackColor'))
+		{
+		btnBackground.en = true
+		btnBackground.style.pixelTop=0;
+		}
+	else
+		{
+		btnBackground.en = false
+		btnBackground.style.pixelTop=-66;
+		}
+	if(document.queryCommandEnabled('ForeColor'))
+		{
+		btnForeground.en = true
+		btnForeground.style.pixelTop=0;
+		}
+	else
+		{
+		btnForeground.en = false
+		btnForeground.style.pixelTop=-66;
+		}	
+		
+	//Absolute
+	if(document.queryCommandEnabled('absoluteposition'))
+		{
+		btnAbsolute.en = true
+		btnAbsolute.style.pixelTop=0;
+		}
+	else
+		{
+		btnAbsolute.en = false
+		btnAbsolute.style.pixelTop=-66;
+		}
+	
+	//Remove Format
+	if(document.queryCommandEnabled('removeformat'))
+		{
+		btnRemoveFormat.en = true
+		btnRemoveFormat.style.pixelTop=0;
+		}
+	else
+		{
+		btnRemoveFormat.en = false
+		btnRemoveFormat.style.pixelTop=-66;
+		}	
+		
+	//Style
+	var oSel	= idContent.document.selection.createRange()
+	var sType = idContent.document.selection.type	
+	if(oSel.parentElement && oSel.text!="")
+		{
+		btnStyle.en = true
+		btnStyle.style.pixelTop=0;
+		}
+	else
+		{
+		btnStyle.en = false
+		btnStyle.style.pixelTop=-66;
+		}
+	if(oSel.parentElement)
+		{
+		btnInsertSymbol.en = true
+		btnInsertSymbol.style.pixelTop=0;
+		}
+	else
+		{
+		btnInsertSymbol.en = false
+		btnInsertSymbol.style.pixelTop=-66;
+		}
+	
+		
+	//Paragraph, Font Name, Font Size
+	if(document.queryCommandEnabled('FormatBlock'))
+		{
+		btnParagraph.en = true
+		btnParagraph.style.pixelTop=0;
+		if(document.queryCommandValue('FormatBlock')==null)
+			btnParagraphText.innerHTML = ""
+		else
+			btnParagraphText.innerHTML = "<font face='MS Sans Serif' size=1 color=#316AC5><b>"+document.queryCommandValue('FormatBlock')+"</b></font>";
+		}
+	else
+		{
+		if(document.queryCommandValue('FormatBlock')==null)
+			btnParagraphText.innerHTML = ""
+		else		
+			btnParagraphText.innerHTML = "<font face='MS Sans Serif' size=1 color=silver><b>"+document.queryCommandValue('FormatBlock')+"</b></font>";
+		btnParagraph.en = false
+		btnParagraph.style.pixelTop=-66;
+		}
+
+	if(document.queryCommandEnabled('FontName'))
+		{
+		btnFontName.en = true
+		btnFontName.style.pixelTop=0;
+		if(document.queryCommandValue('FontName')==null)
+			btnFontNameText.innerHTML = "";
+		else
+			btnFontNameText.innerHTML = "<font face='MS Sans Serif' size=1 color=#316AC5><b>"+document.queryCommandValue('FontName')+"</b></font>";
+		}
+	else
+		{
+		if(document.queryCommandValue('FontName')==null)
+			btnFontNameText.innerHTML = "";
+		else
+			btnFontNameText.innerHTML = "<font face='MS Sans Serif' size=1 color=silver><b>"+document.queryCommandValue('FontName')+"</b></font>";
+		btnFontName.en = false
+		btnFontName.style.pixelTop=-66;
+		}
+
+	if(document.queryCommandEnabled('FontSize'))
+		{
+		btnFontSize.en = true
+		btnFontSize.style.pixelTop=0;
+		if(document.queryCommandValue('FontSize')==null)
+			btnFontSizeText.innerHTML = "";
+		else
+			btnFontSizeText.innerHTML = "<font face='MS Sans Serif' size=1 color=#316AC5><b>"+document.queryCommandValue('FontSize')+"</b></font>";
+		}
+	else
+		{
+		if(document.queryCommandValue('FontSize')==null)
+			btnFontSizeText.innerHTML = "";
+		else
+			btnFontSizeText.innerHTML = "<font face='MS Sans Serif' size=1 color=silver><b>"+document.queryCommandValue('FontSize')+"</b></font>";		
+		btnFontSize.en = false
+		btnFontSize.style.pixelTop=-66;
+		}
+	
+	}
+
+function Justify(btn,sCmd)
+	{
+	if(btn.state)return;//when clicked, no change if already true
+	if(btn!=btnJustifyLeft)
+		{
+		btnJustifyLeft.state=false;
+		btnOut(btnJustifyLeft);
+		}
+	if(btn!=btnJustifyCenter)
+		{
+		btnJustifyCenter.state=false;
+		btnOut(btnJustifyCenter);
+		}		
+	if(btn!=btnJustifyRight)
+		{
+		btnJustifyRight.state=false;
+		btnOut(btnJustifyRight);
+		}	
+	if(btn!=btnJustifyFull)
+		{
+		btnJustifyFull.state=false;
+		btnOut(btnJustifyFull);
+		}
+	doCmd(sCmd);
+	btn.state=!btn.state;
+	}
+function List(btn)
+	{
+	if(btn==btnInsertOrderedList)
+		{
+		doCmd('insertorderedlist');
+		btn.state=!btn.state;
+		
+		btnInsertUnorderedList.state=false;
+		btnOut(btnInsertUnorderedList);
+		}	
+	if(btn==btnInsertUnorderedList)
+		{
+		doCmd('insertunorderedlist');
+		btn.state=!btn.state;
+		
+		btnInsertOrderedList.state=false;
+		btnOut(btnInsertOrderedList);
+		}
+	}
+	
+
+/********************************************************************/
+/*							Toolbar Stuff								
+/********************************************************************/
+function btnOver(btn)
+	{
+	if(btn.en==false)return;
+	if(btn.state){btn.style.pixelTop=-44}else{btn.style.pixelTop=-22};
+	}
+function btnDown(btn)
+	{
+	if(btn.en==false)return;
+	btn.style.pixelTop=-44;
+	}
+function btnUp(btn)
+	{
+	if(btn.en==false)return;
+	if(btn.state)
+		{
+		//togle exception for justify button
+		//if btn.state already true, when it's clicked, onmouseup will still true
+		if(btn==btnJustifyLeft||
+			btn==btnJustifyCenter||
+			btn==btnJustifyRight||
+			btn==btnJustifyFull)
+			{btn.style.pixelTop=-88}
+		else
+			btn.style.pixelTop=0
+		}
+	else
+		{btn.style.pixelTop=-88}
+	}
+function btnOut(btn)
+	{
+	if(btn.en==false)return;
+	if(btn.state){btn.style.pixelTop=-88}else{btn.style.pixelTop=0}
+	}
+
+function insertHTML(sHTML) 
+	{
+	var oSel	= idContent.document.selection.createRange()
+	var sType = idContent.document.selection.type	
+
+	if (sType=="Control")
+		oSel.item(0).outerHTML = sHTML
+	else 
+		oSel.pasteHTML(sHTML)
+	}
+	
+function GetElement(oElement,sMatchTag) 
+	{
+	while (oElement!=null && oElement.tagName!=sMatchTag) 
+		{
+		if(oElement.id=="idContent") return null;
+		oElement = oElement.parentElement
+		}
+	return oElement
+	}
+	
+function drawIcon(left,width,id,title,command)
+	{
+	document.write("<span style=\"width: "+width+";height:22;\">")
+	document.write("	<span style=\"position:absolute;clip: rect(0 "+width+" 22 0)\">")
+	document.write("	<img id=\""+id+"\" ")
+	document.write("	title=\""+title+"\" onclick=\""+command+"\" src=\"ace.gif\" ")
+	document.write("		style=\"position:absolute;top:0;left:-"+left+";\" ")
+	document.write("		onmouseover=\"btnOver(this)\" ")
+	document.write("		onmousedown=\"btnDown(this)\" ")
+	document.write("		onmouseup=\"btnUp(this)\" ")
+	document.write("		onmouseout=\"btnOut(this)\" ")
+	document.write("		width=\"1131\" ")
+	document.write("		height=\"110\">")
+	document.write("	</span>")	
+	document.write("</span>")		
+	}
+
+function drawIcon2(left,width,id,title,command)
+	{
+	document.write("<span style=\"width: "+width+";height:22;\">")
+	document.write("	<span style=\"position:absolute;clip: rect(0 "+width+" 22 0)\">")	
+	document.write("	<img id=\""+id+"\" ") 
+	document.write("	title=\""+title+"\" onclick=\""+command+"\" src=\"ace.gif\" ")
+	document.write("		style=\"position:absolute;top:0;left:-"+left+";\" ")
+	document.write("		onmouseover=\"if(this.en==false)return;this.style.pixelTop=-22\" ")
+	document.write("		onmousedown=\"if(this.en==false)return;this.style.pixelTop=-44\" ")
+	document.write("		onmouseup=\"if(this.en==false)return;this.style.pixelTop=-22\" ")
+	document.write("		onmouseout=\"if(this.en==false)return;this.style.pixelTop=0\" ")
+	document.write("		width=\"1131\" ")
+	document.write("		height=\"110\">")
+	document.write("		<table width="+width+"><tr><td onselectstart='return false' style=\"position:absolute;top:4;left:7;\" id=\""+id+"Text\"></td></tr></table>")
+	document.write("	</span>")	
+	document.write("</span>")
+	}
+
+/*
+1. link bila diinsertkan yg ada link yg lain/proses copy paste maka ada http://localhost/...... (
+ie5 replace => pake vbscript
+ie55 replace => pake javascript replace replace case-sensitive) => sudah di-apply LCase & toLowerCase
+*/
+var displayMode = "RICH"
+function setDisplayMode() 
+	{
+	PopupHide()
+	
+	if(displayMode=='RICH')
+		{
+		idContent.clearAttributes;
+		idContent.style.fontFamily = 'Courier New';
+		idContent.style.fontSize = '12px';
+		idContent.innerText = idContent.innerHTML
+		displayMode = 'HTML';
+		idToolbar.style.display = "none";
+		} 
+	else 
+		{
+		idContent.clearAttributes;
+		idContent.style.fontFamily = '';
+		idContent.style.fontSize = '';
+		idContent.innerHTML = idContent.innerText;
+		
+		var sTmp;
+
+		var sATag = idContent.document.body.all.tags("A");
+		for (var i = sATag.length - 1; i >= 0; i--) 
+			{
+			oA = sATag[i];
+			sTmp=new String(oA.href);
+			//oA.href = (oA.href).replace(sBaseUrl,sBaseUrlNew);
+			oA.href = (sTmp.toLowerCase()).replace(sBaseUrl.toLowerCase(),sBaseUrlNew);
+			}
+			
+		var sImgTag = idContent.document.body.all.tags("IMG");
+		for (var i = sImgTag.length - 1; i >= 0; i--) 
+			{
+			oA = sImgTag[i];
+			sTmp=new String(oA.src);
+			//oA.src = (oA.src).replace(sBaseUrl,sBaseUrlNew);
+			oA.src = (sTmp.toLowerCase()).replace(sBaseUrl.toLowerCase(),sBaseUrlNew);
+			}
+						
+		displayMode = 'RICH';
+		idToolbar.style.display = "block";		
+		}
+	}	
+	
+function pasteFromWord()
+	{
+	idContent.focus()
+	var oSel	= document.selection.createRange()
+	if(oSel.parentElement)//yg dipilih text bukan control
+		{
+		idContentTmp.focus()
+		idContentTmp.document.execCommand("SelectAll")
+		idContentTmp.document.execCommand("Paste")
+
+		oSel.pasteHTML(cleanFromWord())
+		}
+	}
+function cleanFromWord()
+	{
+   	for (var i = 0; i < idContentTmp.all.length; i++) 
+		{
+		idContentTmp.all[i].removeAttribute("className","",0);
+		idContentTmp.all[i].removeAttribute("style","",0);
+		}
+    var sHTML = idContentTmp.innerHTML;
+    sHTML = sHTML.replace(/<\?xml:.*?\/>/g, "");
+    sHTML = sHTML.replace(/<o:p>&nbsp;<\/o:p>/g, "");
+    sHTML = sHTML.replace(/o:/g, "");
+    sHTML = sHTML.replace(/<st1:.*?>/g, ""); 
+   	return  sHTML;
+	}
+</script>
+
+<script TYPE="text/javascript" FOR="document" EVENT="onselectionchange" language="JavaScript">
+	document_onselectionchanged()
+</script>
+
+<script language=JavaScript for=idContent event=onkeypress>
+if(chkBreakMode.checked)
+	{
+	if (event.keyCode==13)
+		{
+		if (event.shiftKey==false)
+			{
+			var thisSel = 
+			document.selection.createRange();
+			thisSel.pasteHTML('<br>')
+			event.cancelBubble = true; 
+			event.returnValue = false; 
+			thisSel.select();
+			thisSel.moveEnd("character", 1);
+			thisSel.moveStart("character", 1);
+			thisSel.collapse(false);
+			return false;
+			idContent.focus();
+			}
+		else
+			{
+			return event.keyCode=13
+			}
+		}
+	}
+</script>
+
+</HEAD>
+<BODY oncontextmenu="return false" ondragstart="return false" style="font:8pt verdana,arial,sans-serif">
+
+<!-- CONTENT EDIT AREA -->
+<div  class="editAreaTmp" id="idContentTmp" name="idContentTmp"></div>
+
+<table id="idToolbar" bgcolor=#E2E2E2 cellpadding=0 cellspacing=0 class=tblCoolbar>
+<tr>
+<td>
+
+
+		<script language="JavaScript">
+		/*
+		queryCommandEnable menentukan button disable atau nggak.
+		Kalau action-nya open window (custom) harus di-protect dgn [if(this.en==false)return;]
+		Tapi kalo action-nya standard command, tdk perlu, karena kalau tdk di-support tdk
+		akan terjadi apa2.
+		
+		Kalau tanpa queryCommandEnable otomatis tdk perlu [if(this.en==false)return;]
+		
+		drawIcon utk toggle, drawIcon2 utk nontogle.
+		*/
+		
+		//tanpa queryCommandState	
+		drawIcon2(349,23,"btnInsertText","Insert Text","InsertText()")//OK
+		
+		drawIcon2(0,57,"btnStyle","Apply Style","if(this.en==false)return;displayStyleBox()")//OK
+
+		drawIcon2(57,106,"btnParagraph","Paragraph","if(this.en==false)return;displayParagraphBox()")
+		drawIcon2(163,143,"btnFontName","Font Name","if(this.en==false)return;displayFontNameBox()")
+		drawIcon2(306,43,"btnFontSize","Font Size","if(this.en==false)return;displayFontSizeBox()")
+		
+		drawIcon2(372,23,"btnCut","Cut","doCmd('Cut');")//OK
+		drawIcon2(395,23,"btnCopy","Copy","doCmd('Copy');")//OK : tanpa btnOver(this), begitu habis diklik posisi onmouseover tetap kelihatan..
+		drawIcon2(418,23,"btnPaste","Paste","doCmd('Paste');")//OK
+		
+		drawIcon2(441,23,"btnUndo","Undo","doCmd('Undo')")//OK
+		drawIcon2(464,23,"btnRedo","Redo","doCmd('Redo')")//OK
+		
+		drawIcon2(1108,23,"btnWord","Paste from Word","pasteFromWord()")//OK
+		
+		document.write("<br>")
+		
+		drawIcon(487,23,"btnBold","Bold","doCmd('Bold');this.state=!this.state;")//OK
+		drawIcon(510,23,"btnItalic","Italic","doCmd('italic');this.state=!this.state;")//OK
+		drawIcon(533,23,"btnUnderline","Underline","doCmd('underline');this.state=!this.state;")//OK
+		drawIcon(556,23,"btnStrikethrough","Strikethrough","doCmd('strikethrough');this.state=!this.state;")//OK
+		drawIcon(579,23,"btnSuperscript","Superscript","doCmd('superscript');this.state=!this.state;")//OK
+		drawIcon(602,23,"btnSubscript","Subscript","doCmd('subscript');this.state=!this.state;")//OK
+		
+		drawIcon(648,23,"btnJustifyLeft","Justify Left","Justify(this,'justifyleft');")//OK
+		drawIcon(671,23,"btnJustifyCenter","Justify Center","Justify(this,'justifycenter');")//OK
+		drawIcon(694,23,"btnJustifyRight","Justify Right","Justify(this,'justifyright');")//OK
+		drawIcon(717,23,"btnJustifyFull","Justify Full","Justify(this,'justifyfull');")//OK
+		
+		drawIcon(740,23,"btnInsertOrderedList","Ordered List","List(this);")//OK
+		drawIcon(763,23,"btnInsertUnorderedList","Unordered List","List(this);")//OK
+		
+		drawIcon2(786,23,"btnIndent","Indent","doCmd('indent');")//OK
+		drawIcon2(809,23,"btnOutdent","Outdent","doCmd('outdent');")//OK
+		
+		//tanpa queryCommandState
+		drawIcon2(832,23,"btnHorizontalLine","Horizontal Line","doCmd('InsertHorizontalRule')")//OK
+		drawIcon2(855,23,"btnTable","Create Table","displayTableBox()")//OK
+		drawIcon2(878,23,"btnExternalLink","External Link","DisplayLinkBox()")//OK
+		
+		drawIcon2(924,23,"btnUnlink","Unlink","doCmd('unlink')")//OK
+		drawIcon2(970,23,"btnInternalImage","Internal Image","if(this.en==false)return;displayExternalImageBox()")//OK
+		drawIcon2(993,23,"btnForeground","Foreground","if(this.en==false)return;displayFgColorBox()")//OK
+		drawIcon2(1016,23,"btnBackground","Background","if(this.en==false)return;displayBgColorBox()")//OK
+		drawIcon2(1039,23,"btnAbsolute","Make Absolute","doCmd('absoluteposition')")//OK
+		drawIcon2(1062,23,"btnRemoveFormat","Remove Formatting","doCmd('removeformat')")//OK
+		
+		drawIcon2(625,23,"btnInsertSymbol","Insert Symbol","displaySymbolBox()")//OK
+		//drawIcon(800,23,"btnFilter","Filter","filterbox.style.display='block';filterbox.style.pixelLeft=(intbodyWidth - filterbox.offsetWidth) / 2 ; filterbox.style.pixelTop=((intbodyHeight - filterbox.offsetHeight) / 2)-60")
+		drawIcon2(1085,23,"btnDocumentBackground","Document Background","if(this.en==false)return;displayDocBgColorBox()")
+		</script>
+	
+</td>
+</tr>
+</table>
+
+
+<div  class="editArea" id="idContent" name="idContent" onclick="PopupHide()"></div>
+
+
+<table border=0 cellpadding=0 cellspacing=0 ID="idToolbarBottom" class=tblCoolbar>
+<tr>
+<td>
+		<input type='checkbox' onclick='setDisplayMode()' id=chkDisplayMode name=chkDisplayMode> HTML
+		<input type='checkbox' id="chkBreakMode" name=chkBreakMode> BR
+</td>
+<td align=right>
+		<INPUT style="display:none" type="button" value="Save" onClick="Save()" id=btnSave name=btnSave disabled>
+</td>
+</tr>
+</table>
+
+
+<!-- /CONTENT EDIT AREA -->
+	
+
+<!-- Link box -->
+<script language=javascript>
+var oSelStore;
+var sTypeStore;
+
+var oElStore;
+var isLayerActive;
+
+function DisplayLinkBox()
+	{
+	PopupHide()	
+	linkbox.style.display='block';
+	setPosition()
+	
+	
+	var sURL;
+	var oSel = document.selection.createRange()
+	var sType = document.selection.type
+
+	oSelStore = oSel
+	sTypeStore = sType
+
+	if (oSel.parentElement)//If text is selected on a layer
+		{
+		oEl = GetElement(oSel.parentElement(),"DIV")//!
+		oElStore = oEl;//Store the active layer, so we can activate it after editing links
+		isLayerActive=true;
+		}
+	else//If control is selected
+		{
+		isLayerActive=false;
+		}	
+
+	/*****************************************************************************/
+	/*					idLinkImage & idLinkImageBorder
+	/*****************************************************************************/
+	//Is the selection image or not ?
+	if (oSel.parentElement)//If not an image (such as text)
+		{
+		oEl = GetElement(oSel.parentElement(),"A")//Get A element if any
+		idLinkImage.style.display = "none";//do not display Image features on the Link Dialog
+		}
+	else //If a control
+		{
+		oEl = GetElement(oSel.item(0),"A")//Get A element if any
+		if ((oSel.item) && (oSel.item(0).tagName=="IMG")) //If an image
+			{
+			idLinkImage.style.display = "block"; //display Image features on the Link Dialog
+			idLinkImageBorder.value = oSel.item(0).border; //get image border
+			}
+		}
+
+	/*****************************************************************************/
+	/*					idLinkTarget & idLinkType & idLinkURL
+	/*****************************************************************************/
+	//Is there an A element ?
+	if (oEl)//If Yes
+		{
+		btnLinkAction.value = "Update"
+		sURL = oEl.href //get image url
+		idLinkTarget.value = oEl.target;//get image target
+		if(sURL.indexOf(":")!=-1)
+			{
+			switch(sURL.split(":")[0])
+				{
+				case "http":
+					idLinkType.value = "http://";
+					idLinkURL.value = sURL.substr(7);
+					break;
+				case "https":
+					idLinkType.value = "https://";
+					idLinkURL.value = sURL.substr(8);
+					break;
+				case "mailto":
+					idLinkType.value = "mailto:";
+					idLinkURL.value = sURL.split(":")[1];
+					break;
+				case "ftp":
+					idLinkType.value = "ftp://";
+					idLinkURL.value = sURL.substr(6);
+					break;
+				case "news":
+					idLinkType.value = "news:";
+					idLinkURL.value = sURL.split(":")[1];
+					break;
+				}
+			}
+		else
+			{
+			idLinkType.value = "";
+			idLinkURL.value = sURL;
+			}
+		}
+	else //If No A element
+		{
+		btnLinkAction.value = "Insert"
+		
+		idLinkTarget.value = ""
+		idLinkType.value = ""
+		idLinkURL.value = ""
+		idLinkImageBorder.value = 0
+		}
+		
+	idLinkURL.focus();//tambahan
+	}
+	
+function CreateHyperlink()
+	{
+	//idContent.focus()
+	
+	PopupHide()//Hide Link Dialog
+	
+	//Get URL typed by user
+	var inpURL = idLinkURL.value 
+	var inpURLType = idLinkType.value 
+	var sURL = inpURLType + inpURL
+	
+	//Use the previous active selection
+	var oSel = oSelStore;// document.selection.createRange()
+	var sType = sTypeStore;// document.selection.type
+
+	/***********************************************************************/
+	/*				idLinkImageBorder
+	/***********************************************************************/
+	if ((oSel.item) && (oSel.item(0).tagName=="IMG")) //If image is selected
+		{
+		oSel.item(0).width = oSel.item(0).offsetWidth //kasih attribute width
+		oSel.item(0).height = oSel.item(0).offsetHeight //kasih attribute height
+		oSel.item(0).border = idLinkImageBorder.value 
+		}
+
+	if(inpURL!="")//If there is URL typed by user
+		{
+		if (oSel.parentElement) //If text selection
+			{
+			if(btnLinkAction.value == "Insert")
+				{
+				if(oSel.text!="")
+					{
+					//noop
+					}
+				else
+					{
+					var oSelTmp = oSel.duplicate()
+					oSel.text = sURL	//displayed text = sURL
+					oSel.setEndPoint("StartToStart",oSelTmp)
+					oSel.select()
+					sType="Text"
+					}
+				}
+			if(btnLinkAction.value == "Update") //pasti ada A element
+				{
+				if(oSel.text!="")
+					{
+					//noop
+					//oEl = GetElement(oSel.parentElement(),"A")
+					//oEl.innerText = sURL
+					}
+				else
+					{
+					//noop
+					//oEl = GetElement(oSel.parentElement(),"A")
+					//oEl.innerText = sURL
+					}
+				}
+			}
+
+		/***********************************************************************/
+		/*				idLinkType & idLinkURL (sURL)
+		/***********************************************************************/
+		oSel.execCommand("CreateLink",false,sURL)
+	
+		//After A element created, then add the Target
+		//oSel = document.selection.createRange()
+		if (oSel.parentElement)
+			{
+			oEl = GetElement(oSel.parentElement(),"A")
+			}
+		else 
+			{
+			oEl = GetElement(oSel.item(0),"A")
+			}
+		if(oEl)
+			{
+			if(idLinkTarget.value=="")
+				{
+				oEl.removeAttribute("target",0)
+				}
+			else
+				{
+				oEl.target = idLinkTarget.value;
+				}
+			}
+		idContent.focus()	
+		oSel.select()//tambahan			
+		}
+		
+	//Activate layer again
+	if(isLayerActive)oElStore.setActive();
+	}
+</script>
+
+<div id="linkbox" style="position:absolute;display:none">
+	<table border="0" cellpadding="0" cellspacing="0" style="table-layout: fixed" bgcolor=Gainsboro ID="Table1">
+	<col width=310><col width=13>
+	<tr>
+	<td>
+			<div class="bar" style="padding-left: 5px;">
+			<font size=2 face=tahoma color=white><b>Insert/Edit Link</b></font>
+			</div>
+	</td>
+	<td style="cursor:hand" onclick="linkbox.style.display='none';if(isLayerActive)oElStore.setActive();">
+			<div class="bar">
+			<font size=2 face=tahoma color=white><b>X</b></font>
+			</div>
+	</td>
+	</tr>
+	<tr>
+	<td colspan=2 style="border-left: #336699 1px solid;border-right: #336699 1px solid;border-bottom: #336699 1px solid;">
+			<br>
+			<table cellpadding="0" cellspacing="3" align=center ID="Table2">
+			<tr>
+			<td>
+					&nbsp;
+					<select id="idLinkType" NAME="idLinkType">
+					<option value="" selected></option>
+					<option value="http://" selected>http://</option>
+					<option value="https://">https://</option>
+					<option value="mailto:">mailto:</option>
+					<option value="ftp://">ftp://</option>
+					<option value="news:">news:</option>
+					</select>
+					<input type=text size=30 id=idLinkURL value="" style="height: 19px;font:8pt verdana,arial,sans-serif" NAME="idLinkURL">
+			</td>
+			</tr>			
+			<tr>
+			<td>
+					&nbsp;&nbsp;Target : 
+					<select id="idLinkTarget" NAME="idLinkTarget">
+					<option value="" selected></option>
+					<option value="_self" selected>self</option>
+					<option value="_blank">blank</option>
+					<option value="_parent">parent</option>
+					</select>
+
+					<div id="idLinkImage" style="display:none">
+					<br> 
+					&nbsp;&nbsp;Image Border :
+					<select id="idLinkImageBorder" NAME="idLinkImageBorder">
+					<option value="0" selected>0</option>
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5">5</option>
+					</select>
+					</div>
+			</td>
+			</tr>
+			<tr>
+			<td align=center><br>
+					<input type="button" value="Cancel" onclick="linkbox.style.display='none';if(isLayerActive)oElStore.setActive();" style="height: 22px;font:8pt verdana,arial,sans-serif" ID="Button1" NAME="Button1">
+					<input type="button" id="btnLinkAction" name="btnLinkAction" value="Insert" onclick="CreateHyperlink();linkbox.style.display='none'" style="height: 22px;font:8pt verdana,arial,sans-serif">
+					</td>
+			</tr>
+			</table>
+			<br>
+	</td>
+	</tr>
+	</table>
+</div>	
+<!-- /Link box -->
+
+
+<!-- Colour box -->
+<script language=javascript>
+function displayFgColorBox()
+	{
+	PopupHide()
+	
+	if(divFgColor.innerHTML=="")
+		{
+		divFgColor.innerHTML=writeColorPicker("idForeColor","doCmd('ForeColor',idForeColor.value);fgcolorbox.style.display='none'",0);
+		
+		for (i=0; i<divFgColor.all.length; i++)
+			divFgColor.all(i).unselectable = "on";		
+		}
+	setDefaultColor("idForeColor","")
+	
+	fgcolorbox.style.display='block';
+	setPosition()
+	}
+function displayBgColorBox()
+	{
+	PopupHide()
+	
+	if(divBgColor.innerHTML=="")
+		{
+		divBgColor.innerHTML=writeColorPicker("idBackColor","doCmd('BackColor',idBackColor.value);bgcolorbox.style.display='none'",0);
+		for (i=0; i<divBgColor.all.length; i++)
+			divBgColor.all(i).unselectable = "on";			
+		}
+	setDefaultColor("idBackColor","")
+	
+	bgcolorbox.style.display='block';
+	setPosition()
+	}
+function displayDocBgColorBox()
+	{
+	PopupHide()
+	
+	if(divDocBgColor.innerHTML=="")
+		{
+		divDocBgColor.innerHTML=writeColorPicker("idDocBackColor","idContent.style.background=idDocBackColor.value;docbgcolorbox.style.display='none'",0);
+		for (i=0; i<divDocBgColor.all.length; i++)
+			divDocBgColor.all(i).unselectable = "on";			
+		}
+	setDefaultColor("idDocBackColor","")
+	
+	docbgcolorbox.style.display='block';
+
+	setPosition()
+	}
+function setDefaultColor(Name,Color)
+	{
+	var OutputID = Name
+	var TextID = Name + "_1"
+	var ColorID = Name + "_2"
+	eval(OutputID).value = Color;
+	eval(TextID).innerHTML = "<font size=1>"+Color+"</font>"
+	eval(ColorID).style.background = Color;
+	}
+function writeColorPicker(Name,Command,Type)
+	{
+	var OutputID = Name
+	var TextID = Name + "_1"
+	var ColorID = Name + "_2"
+	var c1 = new Array("FFFFCC","FFCC66","FF9900","FFCC99","FF6633","FFCCCC","CC9999","FF6699","FF99CC","FF66CC","FFCCFF","CC99CC","CC66FF","CC99FF","9966CC","CCCCFF","9999CC","3333FF","6699FF","0066FF","99CCFF","66CCFF","99CCCC","CCFFFF","99FFCC","66CC99","66FF99","99FF99","CCFFCC","33FF33","66FF00","CCFF99","99FF00","CCFF66","CCCC66","FFFFFF")
+	var c2 = new Array("FFFF99","FFCC00","FF9933","FF9966","CC3300","FF9999","CC6666","FF3366","FF3399","FF00CC","FF99FF","CC66CC","CC33FF","9933CC","9966FF","9999FF","6666FF","3300FF","3366FF","0066CC","3399FF","33CCFF","66CCCC","99FFFF","66FFCC","33CC99","33FF99","66FF66","99CC99","00FF33","66FF33","99FF66","99FF33","CCFF00","CCCC33","CCCCCC")
+	var c3 = new Array("FFFF66","FFCC33","CC9966","FF6600","FF3300","FF6666","CC3333","FF0066","FF0099","FF33CC","FF66FF","CC00CC","CC00FF","9933FF","6600CC","6633FF","6666CC","3300CC","0000FF","3366CC","0099FF","00CCFF","339999","66FFFF","33FFCC","00CC99","00FF99","33FF66","66CC66","00FF00","33FF00","66CC00","99CC66","CCFF33","999966","999999")
+	var c4 = new Array("FFFF33","CC9900","CC6600","CC6633","FF0000","FF3333","993333","CC3366","CC0066","CC6699","FF33FF","CC33CC","9900CC","9900FF","6633CC","6600FF","666699","3333CC","0000CC","0033FF","6699CC","3399CC","669999","33FFFF","00FFCC","339966","33CC66","00FF66","669966","00CC00","33CC00","66CC33","99CC00","CCCC99","999933","666666")
+	var c5 = new Array("FFFF00","CC9933","996633","993300","CC0000","FF0033","990033","996666","993366","CC0099","FF00FF","990099","996699","660099","663399","330099","333399","000099","0033CC","003399","336699","0099CC","006666","00FFFF","33CCCC","009966","00CC66","339933","336633","33CC33","339900","669933","99CC33","666633","999900","333333")
+	var c6 = new Array("CCCC00","996600","663300","660000","990000","CC0033","330000","663333","660033","990066","CC3399","993399","660066","663366","330033","330066","333366","000066","000033","003366","006699","003333","336666","00CCCC","009999","006633","009933","006600","003300","00CC33","009900","336600","669900","333300","666600","000000")
+	
+	
+	var sHTML = "";
+	sHTML += ("<table border=0 width=370 align=center cellpadding=0 cellspacing=0><tr><td width=45>  <table border=1 cellpadding=0 cellspacing=0><tr><td id='"+ColorID+"' width=25 height=25></td></tr></table>   <div id='"+TextID+"'><font size=1>&nbsp;</font></div> </td><td>&nbsp;</td><td>")
+	sHTML += ("<table cellpadding=0 cellspacing=1 bgcolor=black>")
+	if(Type==0)
+		{
+		for(var i=1;i<=6;i++)
+			{
+			sHTML += ("<tr>")
+			for(var r=0;r<eval("c"+i).length;r++)
+				{
+				var colour = eval("c"+i+"[r]")
+				sHTML += ("<td onclick=\""+OutputID+".value='"+colour+"';"+Command+"\" style=\"cursor:hand;background-color:"+colour+";\" width=9 height=6 onmouseover=\""+ColorID+".style.background='#"+colour+"';"+TextID+".innerHTML='<font size=1>"+colour+"</font>'\"></td>")
+				}	
+			sHTML += ("</tr>")
+			}
+		}
+	if(Type==1)
+		{
+		for(var i=1;i<=6;i++)
+			{
+			sHTML += ("<tr>")
+			for(var r=0;r<eval("c"+i).length;r++)
+				{
+				var colour = eval("c"+i+"[r]")
+				sHTML += ("<td onclick=\""+ColorID+".style.background='#"+colour+"';"+TextID+".innerHTML='<font size=1>"+colour+"</font>';"+OutputID+".value='"+colour+"';"+Command+"\" style=\"cursor:hand;background-color:"+colour+";\" width=9 height=6 onmouseover=\"\"></td>")
+				}	
+			sHTML += ("</tr>")
+			}
+		}
+	sHTML += ("</table>")
+	sHTML += ("<input type=hidden id='"+OutputID+"'>")
+	sHTML += ("</td></tr></table>")	
+	return sHTML;		
+	}
+</script>
+
+<!-- Colour box -->
+<div id="fgcolorbox" style="position:absolute;display:none;">
+	<table border="0" cellpadding="0" cellspacing="0" style="table-layout: fixed" bgcolor="Gainsboro" ID="Table3">
+	<col width="430">
+	<col width="13">
+	<tr>
+	<td>
+			<div class="bar" style="padding-left: 5px;">
+			<font size="2" face="tahoma" color="white"><b>Select Foreground Color</b></font>
+			</div>
+	</td>
+	<td style="cursor:hand" onclick="fgcolorbox.style.display='none'">
+			<div class="bar">
+			<font size="2" face="tahoma" color="white"><b>X</b></font>
+			</div>
+	</td>
+	</tr>
+	<tr>
+	<td colspan="2" style="border-left: #336699 1px solid;border-right: #336699 1px solid;border-bottom: #336699 1px solid;">
+			<br>
+			<div id="divFgColor"></div>
+			<br>
+	</td>
+	</tr>
+	</table>
+</div>
+<!-- /Colour box -->
+
+
+<!-- Colour box -->
+<div id="bgcolorbox" style="position:absolute;display:none;">
+	<table border="0" cellpadding="0" cellspacing="0" style="table-layout: fixed" bgcolor="Gainsboro" ID="Table4">
+	<col width="430">
+	<col width="13">
+	<tr>
+	<td>
+			<div class="bar" style="padding-left: 5px;">
+			<font size="2" face="tahoma" color="white"><b>Select Background Color</b></font>
+			</div>
+	</td>
+	<td style="cursor:hand" onclick="bgcolorbox.style.display='none'">
+			<div class="bar">
+			<font size="2" face="tahoma" color="white"><b>X</b></font>
+			</div>
+	</td>
+	</tr>
+	<tr>
+	<td colspan="2" style="border-left: #336699 1px solid;border-right: #336699 1px solid;border-bottom: #336699 1px solid;">
+			<br>
+			<div id="divBgColor"></div>
+			<br>
+	</td>
+	</tr>
+	</table>
+</div>
+<!-- /Colour box -->
+
+<!-- Document Colour box -->
+<div id="docbgcolorbox" style="position:absolute;display:none;">
+	<table border="0" cellpadding="0" cellspacing="0" style="table-layout: fixed" bgcolor="Gainsboro" ID="Table19">
+	<col width="430">
+	<col width="13">
+	<tr>
+	<td>
+			<div class="bar" style="padding-left: 5px;">
+			<font size="2" face="tahoma" color="white"><b>Select Document Background Color</b></font>
+			</div>
+	</td>
+	<td style="cursor:hand" onclick="docbgcolorbox.style.display='none'">
+			<div class="bar">
+			<font size="2" face="tahoma" color="white"><b>X</b></font>
+			</div>
+	</td>
+	</tr>
+	<tr>
+	<td colspan="2" style="border-left: #336699 1px solid;border-right: #336699 1px solid;border-bottom: #336699 1px solid;">
+			<br>
+			<div id="divDocBgColor"></div>
+			<br>
+	</td>
+	</tr>
+	</table>
+</div>
+<!-- /Document Colour box -->
+
+<!-- Paragraph box -->
+<script language=javascript>
+function displayParagraphBox()
+	{
+	PopupHide()
+	parabox.style.display='block';
+	setPosition()
+	}
+function displayFontNameBox()
+	{
+	PopupHide()
+	fontnamebox.style.display='block';
+	setPosition()
+	}
+function displayFontSizeBox()
+	{
+	PopupHide()
+	fontsizebox.style.display='block';
+	setPosition()
+	}
+	
+	
+function setParagraph(Paragraph)
+	{
+	btnParagraphText.innerHTML = "<font face='MS Sans Serif' size=1 color=#316AC5><b>"+Paragraph+"</b></font>";
+	}
+function setFontName(FontName)
+	{
+	btnFontNameText.innerHTML = "<font face='MS Sans Serif' size=1 color=#316AC5><b>"+FontName+"</b></font>";
+	}	
+function setFontSize(FontSize)
+	{
+	btnFontSizeText.innerHTML = "<font face='MS Sans Serif' size=1 color=#316AC5><b>"+FontSize+"</b></font>";
+	}
+</script>
+<div id="parabox" style="position:absolute;display:none;">
+	<table border="0" cellpadding="0" cellspacing="0" style="table-layout: fixed" bgcolor=Gainsboro ID="Table5">
+	<col width=240><col width=13>
+	<tr>
+	<td>
+			<div class="bar" style="padding-left: 5px;">
+			<font size=2 face=tahoma color=white><b>Paragraph Style</b></font>
+			</div>
+	</td>
+	<td style="cursor:hand" onclick="parabox.style.display='none'">
+			<div class="bar">
+			<font size=2 face=tahoma color=white><b>X</b></font>
+			</div>
+	</td>
+	</tr>
+	<tr>
+	<td colspan=2 style="border-left: #336699 1px solid;border-right: #336699 1px solid;border-bottom: #336699 1px solid;">
+			<br>
+			<table align=center border=0 width=100% height=100% cellpadding=0 cellspacing=0 ID="Table6">
+			<tr onclick="doCmd('FormatBlock','<H1>');setParagraph(this.innerText);parabox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center height=10><h1><span id="idH1"></span></h1></td></tr>
+			<tr onclick="doCmd('FormatBlock','<H2>');setParagraph(this.innerText);parabox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center><h2><span id="idH2"></span></h2></td></tr>
+			<tr onclick="doCmd('FormatBlock','<H3>');setParagraph(this.innerText);parabox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center><h3><span id="idH3"></span></h3></td></tr>
+			<tr onclick="doCmd('FormatBlock','<H4>');setParagraph(this.innerText);parabox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center><h4><span id="idH4"></span></h4></td></tr>
+			<tr onclick="doCmd('FormatBlock','<H5>');setParagraph(this.innerText);parabox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center><h5><span id="idH5"></span></h5></td></tr>
+			<tr onclick="doCmd('FormatBlock','<H6>');setParagraph(this.innerText);parabox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center><h6><span id="idH6"></span></h6></td></tr>
+			<tr onclick="doCmd('FormatBlock','<PRE>');setParagraph(this.innerText);parabox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center><pre><span id="idPRE"></span></pre></td></tr>
+			<tr onclick="doCmd('FormatBlock','<P>');setParagraph(this.innerText);parabox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center height=10><p><span id="idP"></span></p></td></tr>
+			</table>
+			<br>
+	</td>
+	</tr>
+	</table>
+</div>
+<!-- /Paragraph box -->
+
+<!-- Font Name box -->
+<div id="fontnamebox" style="position:absolute;display:none;">
+	<table border="0" cellpadding="0" cellspacing="0" style="table-layout: fixed" bgcolor=Gainsboro ID="Table7">
+	<col width=200><col width=13>
+	<tr>
+	<td>
+			<div class="bar" style="padding-left: 5px;">
+			<font size=2 face=tahoma color=white><b>Font Name</b></font>
+			</div>
+	</td>
+	<td style="cursor:hand" onclick="fontnamebox.style.display='none'">
+			<div class="bar">
+			<font size=2 face=tahoma color=white><b>X</b></font>
+			</div>
+	</td>
+	</tr>
+	<tr>
+	<td colspan=2 style="border-left: #336699 1px solid;border-right: #336699 1px solid;border-bottom: #336699 1px solid;">
+			<table align=center border=0 width=100% height=100% cellpadding=0 cellspacing=2 ID="Table8">
+			<tr onclick="doCmd('fontname','Arial');setFontName(this.innerText);fontnamebox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center><font face="Arial" size=1>Arial</font></td></tr>
+			<tr onclick="doCmd('fontname','Arial Black');setFontName(this.innerText);fontnamebox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center><font face="Arial Black" size=1>Arial Black</font></td></tr>
+			<tr onclick="doCmd('fontname','Arial Narrow');setFontName(this.innerText);fontnamebox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center><font face="Arial Narrow" size=1>Arial Narrow</font></td></tr>
+			<tr onclick="doCmd('fontname','Comic Sans MS');setFontName(this.innerText);fontnamebox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center><font face="Comic Sans MS" size=1>Comic Sans MS</font></td></tr>
+			<tr onclick="doCmd('fontname','Courier New');setFontName(this.innerText);fontnamebox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center><font face="Courier New" size=1>Courier New</font></td></tr>
+			<tr onclick="doCmd('fontname','System');setFontName(this.innerText);fontnamebox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center><font face="System" size=1>System</font></td></tr>
+			<tr onclick="doCmd('fontname','Tahoma');setFontName(this.innerText);fontnamebox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center><font face="Tahoma" size=1>Tahoma</font></td></tr>
+			<tr onclick="doCmd('fontname','Times New Roman');setFontName(this.innerText);fontnamebox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center><font face="Times New Roman" size=1>Times New Roman</font></td></tr>
+			<tr onclick="doCmd('fontname','Verdana');setFontName(this.innerText);fontnamebox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center><font face="Verdana" size=1>Verdana</font></td></tr>
+			<tr onclick="doCmd('fontname','Wingdings');setFontName(this.innerText);fontnamebox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center><font face="Wingdings" size=1>Wingdings</font></td></tr>
+			</table>
+	</td>
+	</tr>
+	</table>
+</div>
+<!-- /Font Name box -->
+
+<!-- Font Size box -->
+<div id="fontsizebox" style="position:absolute;display:none;">
+<table border="0" cellpadding="0" cellspacing="0" style="table-layout: fixed" bgcolor=Gainsboro ID="Table9">
+	<col width=240><col width=13>
+	<tr>
+	<td>
+			<div class="bar" style="padding-left: 5px;">
+			<font size=2 face=tahoma color=white><b>Font Size</b></font>
+			</div>
+	</td>
+	<td style="cursor:hand" onclick="fontsizebox.style.display='none'">
+			<div class="bar">
+			<font size=2 face=tahoma color=white><b>X</b></font>
+			</div>
+	</td>
+	</tr>
+	<tr>
+	<td colspan=2 style="border-left: #336699 1px solid;border-right: #336699 1px solid;border-bottom: #336699 1px solid;">
+			<br>
+			<table align=center border=0 width=100% height=100% cellpadding=0 cellspacing=0 ID="Table10">
+			<tr onclick="doCmd('fontsize',1);setFontSize(1);fontsizebox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center><font size=1>Size 1</font></td></tr>
+			<tr onclick="doCmd('fontsize',2);setFontSize(2);fontsizebox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center><font size=2>Size 2</font></td></tr>
+			<tr onclick="doCmd('fontsize',3);setFontSize(3);fontsizebox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center><font size=3>Size 3</font></td></tr>
+			<tr onclick="doCmd('fontsize',4);setFontSize(4);fontsizebox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center><font size=4>Size 4</font></td></tr>
+			<tr onclick="doCmd('fontsize',5);setFontSize(5);fontsizebox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center><font size=5>Size 5</font></td></tr>
+			<tr onclick="doCmd('fontsize',6);setFontSize(6);fontsizebox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center><font size=6>Size 6</font></td></tr>
+			<tr onclick="doCmd('fontsize',7);setFontSize(7);fontsizebox.style.display='none'" onmouseover="this.style.color='tomato'" onmouseout="this.style.color='black'" style="cursor:hand"><td align=center><font size=7>Size 7</font></td></tr>
+			</table>
+			<br>
+	</td>
+	</tr>
+	</table>
+</div>
+<!-- /Font Size box -->
+
+
+<!-- Table box -->
+<script language=javascript>
+function IsPosInt(sInput)
+	{
+	if(sInput=="") return true;//must be empty or number greater than or equal 0
+	var sTmp = sInput.toString();
+	for(var i=0;i<sTmp.length;i++)
+		{
+		var sChar = sTmp.charAt(i);
+		if(sChar<"0"||sChar>"9") return false;
+		}
+	return true;
+	}
+function IsPosIntNotZero(sInput)//must be empty or number greater than or equal 1
+	{
+	if(sInput=="") return true;
+	var sTmp = sInput.toString();
+	for(var i=0;i<sTmp.length;i++)
+		{
+		var sChar = sTmp.charAt(i);
+		if(sChar<"0"||sChar>"9") return false;
+		}
+	if(sInput*1==0) {return false}
+	else {return true};
+	}
+
+function TableInit()
+	{
+	//INSERT
+	inpRows.unselectable = "off";
+	inpCols.unselectable = "off";
+	inpTblAlign.unselectable = "off";
+	inpWidth.unselectable = "off";
+	inpHeight.unselectable = "off";
+	inpPadding.unselectable = "off";
+	inpSpacing.unselectable = "off";
+	inpBorder.unselectable = "off";
+	inpBorderColor.unselectable = "off";
+	inpBgImage.unselectable = "off";
+	inpBgColor.unselectable = "off";
+
+	//EDIT
+	//TableInsertRow()
+	//TableInsertCol()
+	//TableDeleteRow()
+	//TableDeleteCol()
+	//TableDeleteCell()
+	//TableColSpan()
+	//TableRowSpan()
+	inpTblAlign2.unselectable = "off";
+	inpWidth2.unselectable = "off";
+	inpHeight2.unselectable = "off";
+	inpPadding2.unselectable = "off";
+	inpSpacing2.unselectable = "off";
+	inpBorder2.unselectable = "off";
+	inpBorderColor2.unselectable = "off";
+	inpBgImage2.unselectable = "off";
+	inpBgColor2.unselectable = "off";
+
+	//CELL
+	inpCellWidth.unselectable = "off";
+	inpCellHeight.unselectable = "off";
+	inpCellAlign.unselectable = "off";
+	inpCellVAlign.unselectable = "off";
+	inpCellBgImage.unselectable = "off";
+	inpCellBgColor.unselectable = "off";
+	//inpCellWrap
+	}
+
+var oSel_Table //selection state
+var sType_Table
+
+function displayTableBox()
+	{
+	//display table box
+	PopupHide()
+	
+	//set default value
+	inpRows.value = 2;
+	inpCols.value = 2;
+	inpTblAlign.value = "";
+	inpWidth.value = "";
+	inpHeight.value = "";
+	inpPadding.value = 0;
+	inpSpacing.value = 0;
+	inpBorder.value = 1;
+	inpBorderColor.value = "";
+	inpBgImage.value = "";
+	inpBgColor.value = "";
+
+	
+	//get selection
+	idContent.focus()
+	var oSel	= idContent.document.selection.createRange()
+	var sType = idContent.document.selection.type
+
+	//Save selection
+	oSel_Table = oSel
+	sType_Table = sType
+	
+	var oBlock = (oSel.parentElement != null ? GetElement(oSel.parentElement(),"TABLE") : GetElement(oSel.item(0),"TABLE"))
+	if (oBlock!=null) //If inside existing table
+		{
+		//Get existing table properties
+		inpTblAlign2.value = oBlock.align
+		
+		var st = oBlock.width
+		if(st.indexOf("%")!=-1)
+			{
+			inpWidth2.value = st.substring(0,st.indexOf("%")) //remove last %
+			inpWidth2Me.value = "%"
+			}
+		else
+			{
+			inpWidth2.value = oBlock.width
+			inpWidth2Me.value = ""
+			}
+			
+		var st2 = oBlock.height
+		if(st2.indexOf("%")!=-1)
+			{
+			inpHeight2.value = st2.substring(0,st2.indexOf("%")) //remove last %
+			inpHeight2Me.value = "%"
+			}
+		else
+			{
+			inpHeight2.value = oBlock.height
+			inpHeight2Me.value = ""
+			}			
+		inpPadding2.value = oBlock.cellPadding
+		inpSpacing2.value = oBlock.cellSpacing
+		inpBorder2.value = oBlock.border
+		
+		inpBorderColor2.value = (oBlock.borderColor).substring(1)
+		inpBgImage2.value = oBlock.background
+		inpBgColor2.value = (oBlock.bgColor).substring(1)
+
+		if(oSel.parentElement != null)//yg dipilih text, bukan control(=table)
+			{//Get existing cell properties
+			
+			var oTD = GetElement(oSel.parentElement(),"TD");
+			
+			if(oTD==null)return; //jika yg di select adl text tapi meliputi lebih dari satu cell
+				
+			var st3 = oTD.width //HTML : width
+			if(st3.indexOf("%")!=-1)
+				{
+				inpCellWidth.value = st3.substring(0,st3.indexOf("%")) //remove last %
+				inpCellWidthMe.value = "%"
+				}
+			else
+				{
+				inpCellWidth.value = oTD.width
+				inpCellWidthMe.value = ""
+				}
+			var st4 = oTD.height //HTML : height
+			if(st4.indexOf("%")!=-1)
+				{
+				inpCellHeight.value = st4.substring(0,st4.indexOf("%")) //remove last %
+				inpCellHeightMe.value = "%"
+				}
+			else
+				{
+				inpCellHeight.value = oTD.height
+				inpCellHeightMe.value = ""
+				}			
+			
+			inpCellAlign.value = oTD.align //HTML : align
+			inpCellVAlign.value = oTD.vAlign //HTML : vAlign
+			inpCellBgImage.value = oTD.background //HTML : background
+			inpCellBgColor.value = (oTD.bgColor).substring(1)	//HTML : bgColor 	
+			inpCellWrap.checked = !oTD.noWrap;	
+			
+			//DISPLAY BOX
+			tablebox.style.display='block';
+			setPosition();			
+			
+			//set the tab
+			TabEditCell()
+			}
+		else
+			{
+			//DISPLAY BOX
+			tablebox.style.display='block';
+			setPosition();
+				
+			//set the tab
+			TabEditTable()		
+			
+			//disable create table & edit table
+			TabDisable1()
+			}
+		}
+	else
+		{
+		//DISPLAY BOX
+		tablebox.style.display='block';
+		setPosition();		
+		
+		//set the tab
+		TabInsertTable()
+		
+		//disable edit table & edit cell
+		TabDisable2()
+		}	
+	return true;
+	}
+
+function TabInsertTable()
+	{
+	divBorderColorPick.style.display = "none";
+	divBgColorPick.style.display = "none";	
+		
+	idInsertTable.style.display="block";
+	idEditTable.style.display="none";
+	idEditCell.style.display="none";
+
+	tab1.style.cursor = "";
+	tab1.style.background = "#ececec";
+	tab1.style.color = "darkslateblue";
+	tab1.style.borderBottom = "";
+	tab1.innerHTML = "<b>Create Table</b>"
+
+	tab2.style.background = "#bebebe";
+	tab2.style.color = "darkslateblue";
+	tab2.style.borderBottom = "darkgray 1px solid";
+	tab2.innerHTML = "<div style='cursor:hand;width=100%;' onclick='TabEditTable()'><b><u>Edit Table</u></b></div>"
+	
+	tab3.style.background = "#bebebe";
+	tab3.style.color = "darkslateblue";
+	tab3.style.borderBottom = "darkgray 1px solid";
+	tab3.innerHTML = "<div style='cursor:hand;width=100%;' onclick='TabEditCell()'><b><u>Edit Cell</u></b></div>"
+	
+	//when the control (table) is selected, the focus shouldn't be displayed. 
+	//Then set the focus to another control.
+	inpRows.focus();
+	}
+function TabEditTable()
+	{	
+	divBorderColor2Pick.style.display = "none";
+	divBgColor2Pick.style.display = "none";	
+		
+	idInsertTable.style.display="none";
+	idEditTable.style.display="block";
+	idEditCell.style.display="none";
+
+	tab1.style.background = "#bebebe";
+	tab1.style.color = "darkslateblue";
+	tab1.style.borderBottom = "darkgray 1px solid";
+	tab1.innerHTML = "<div style='cursor:hand;width=100%;' onclick='TabInsertTable()'><b><u>Create Table</u></b></div>"
+
+	tab2.style.cursor = "";
+	tab2.style.background = "#ececec";
+	tab2.style.color = "darkslateblue";
+	tab2.style.borderBottom = "";
+	tab2.innerHTML = "<b>Edit Table</b>"
+	
+	tab3.style.background = "#bebebe";
+	tab3.style.color = "darkslateblue";
+	tab3.style.borderBottom = "darkgray 1px solid";
+	tab3.innerHTML = "<div style='cursor:hand;width=100%;' onclick='TabEditCell()'><b><u>Edit Cell</u></b></div>"
+	
+	//when the control (table) is selected, the focus shouldn't be displayed. 
+	//Then set the focus to another control.
+	inpBgColor2.focus() 	
+	}
+function TabEditCell()
+	{
+	idEditCell.style.display="block";
+	divCellBgColorPick.style.display = "none";
+		
+	idInsertTable.style.display="none";
+	idEditTable.style.display="none";
+	idEditCell.style.display="block";
+	
+	tab1.style.background = "#bebebe";
+	tab1.style.color = "darkslateblue";
+	tab1.style.borderBottom = "darkgray 1px solid";
+	tab1.innerHTML = "<div style='cursor:hand;width=100%;' onclick='TabInsertTable()'><b><u>Create Table</u></b></div>"
+	
+	tab2.style.background = "#bebebe";
+	tab2.style.color = "darkslateblue";
+	tab2.style.borderBottom = "darkgray 1px solid";
+	tab2.innerHTML = "<div style='cursor:hand;width=100%;' onclick='TabEditTable()'><b><u>Edit Table</u></b></div>"
+	
+	tab3.style.cursor = "";
+	tab3.style.background = "#ececec";
+	tab3.style.color = "darkslateblue";
+	tab3.style.borderBottom = "";
+	tab3.innerHTML = "<b>Edit Cell</b>"	
+	
+	//when the control (table) is selected, the focus shouldn't be displayed. 
+	//Then set the focus to another control.
+	inpCellBgColor.focus()	
+	}
+function TabDisable1()
+	{
+	tab1.style.cursor = "";
+	tab1.style.background = "#bebebe";
+	tab1.style.color = "darkgray";
+	tab1.style.borderBottom = "";
+	tab1.innerHTML = "<b><u>Create Table</u></b>"
+
+	tab3.style.cursor = "";
+	tab3.style.background = "#bebebe";
+	tab3.style.color = "darkgray";
+	tab3.style.borderBottom = "";
+	tab3.innerHTML = "<b><u>Edit Cell</u></b>"
+	}
+function TabDisable2()
+	{
+	tab2.style.cursor = "";
+	tab2.style.background = "#bebebe";
+	tab2.style.color = "darkgray";
+	tab2.style.borderBottom = "";
+	tab2.innerHTML = "<b><u>Edit Table</u></b>"
+
+	tab3.style.cursor = "";
+	tab3.style.background = "#bebebe";
+	tab3.style.color = "darkgray";
+	tab3.style.borderBottom = "";
+	tab3.innerHTML = "<b><u>Edit Cell</u></b>"		
+	}
+		
+function TableInsert()
+	{
+	if(!(IsPosIntNotZero(inpRows.value) &&
+		IsPosIntNotZero(inpCols.value) &&
+		IsPosIntNotZero(inpWidth.value) &&
+		IsPosIntNotZero(inpHeight.value) &&
+		IsPosInt(inpBorder.value) &&
+		IsPosInt(inpPadding.value) &&
+		IsPosInt(inpSpacing.value))) 
+		{
+		alert("Invalid input.");
+		return false;
+		}
+			
+	var sHTML = ""
+		+ "<TABLE "
+		+ (((inpBorder.value=="") || (inpBorder.value=="0")) ? "class=\"NOBORDER\"" : "")
+		+	(inpTblAlign.value != "" ? "align=\"" + inpTblAlign.value + "\" " : "")		
+		+	(inpWidth.value != "" ? "width=\"" + inpWidth.value + inpWidthMe.value + "\" " : "")
+		+	(inpHeight.value != "" ? "height=\"" + inpHeight.value + inpHeightMe.value + "\" " : "")		
+		+	(inpPadding.value != "" ? "cellPadding=\"" + inpPadding.value + "\" " : "")
+		+	(inpSpacing.value != "" ? "cellSpacing=\"" + inpSpacing.value + "\" " : "")
+		+	(inpBorder.value != "" ? "border=\"" + inpBorder.value + "\" " : "")
+		+	(inpBorderColor.value != "" ? "bordercolor=\"" + inpBorderColor.value + "\" " : "")
+		+	(inpBgImage.value != "" ? "background=\"" + inpBgImage.value + "\" " : "")
+		+	(inpBgColor.value != "" ? "bgColor=\"" + inpBgColor.value + "\" " : "")
+		+ ">"
+	for (var i=0; i < inpRows.value; i++) 
+		{
+		sHTML += "<TR>"
+		for (var j=0; j < inpCols.value; j++)
+		sHTML += "<TD>&nbsp;</TD>"
+		sHTML += "</TR>"
+		}
+	sHTML += "</TABLE>"
+		
+	idContent.focus()
+	if (sType_Table=="Control")oSel_Table.item(0).outerHTML = sHTML
+	else oSel_Table.pasteHTML(sHTML)
+	
+	return true;
+	}
+function TableUpdate()
+	{
+	if(!(IsPosIntNotZero(inpWidth2.value) &&
+		IsPosIntNotZero(inpHeight2.value) &&
+		IsPosInt(inpPadding2.value) &&
+		IsPosInt(inpSpacing2.value) &&
+		IsPosInt(inpBorder2.value))) 
+		{
+		alert("Invalid input.");
+		return false;
+		}
+			
+	var oBlock = (oSel_Table.parentElement != null ? GetElement(oSel_Table.parentElement(),"TABLE") : GetElement(oSel_Table.item(0),"TABLE"))
+	if (oBlock!=null) 
+		{
+		oBlock.align = inpTblAlign2.value
+		if(inpWidth2.value!="")
+			{
+			oBlock.style.width=""; //remove style width
+			oBlock.width = inpWidth2.value + inpWidth2Me.value;
+			}
+		else
+			{
+			oBlock.width = ""
+			}
+		if(inpHeight2.value!="")
+			{
+			oBlock.style.height=""; //remove style height
+			oBlock.height = inpHeight2.value + inpHeight2Me.value;
+			}
+		else
+			{
+			oBlock.height = ""
+			}		
+		oBlock.cellPadding = inpPadding2.value
+		oBlock.cellSpacing = inpSpacing2.value
+		oBlock.border = inpBorder2.value
+		oBlock.borderColor = inpBorderColor2.value
+		oBlock.background = inpBgImage2.value
+		oBlock.bgColor = inpBgColor2.value
+		}
+	oSel_Table.select()
+	
+	return true;
+	}
+function CellUpdate()
+	{
+	if(!(IsPosIntNotZero(inpCellWidth.value) &&
+		IsPosIntNotZero(inpCellHeight.value))) 
+		{
+		alert("Invalid input.");
+		return false;
+		}
+			
+	var oTD = (oSel_Table.parentElement != null ? GetElement(oSel_Table.parentElement(),"TD") : GetElement(oSel_Table.item(0),"TD"))
+	if (oTD!=null)
+		{
+		if(inpCellWidth.value!="")
+			{
+			//oTD.style.width=""; //remove style width => tdk perlu
+			oTD.width = inpCellWidth.value + inpCellWidthMe.value;
+			}
+		else
+			{
+			oTD.width = ""
+			}
+		if(inpCellHeight.value!="")
+			{
+			//oTD.style.height=""; //remove style height => tdk perlu
+			oTD.height = inpCellHeight.value + inpCellHeightMe.value;
+			}
+		else
+			{
+			oTD.height = ""
+			}		
+		
+		oTD.align = inpCellAlign.value ;
+		oTD.vAlign = inpCellVAlign.value;
+		oTD.background = inpCellBgImage.value;
+		oTD.bgColor = inpCellBgColor.value ;
+		oTD.noWrap = !inpCellWrap.checked;
+		}
+	oSel_Table.select()
+	
+	return true;
+	}
+	
+function TableInsertRow(type)
+	{
+	var oSel = oSel_Table
+	var oBlock = (oSel.parentElement != null ? GetElement(oSel.parentElement(),"TABLE") : GetElement(oSel.item(0),"TABLE"))
+	
+	var numofrows = oBlock.rows.length; //num of rows
+	
+	//Dia ada di row mana ?
+	var i,iRow;
+	var oTR = (oSel.parentElement != null ? GetElement(oSel.parentElement(),"TR") : GetElement(oSel.item(0),"TR"))	
+	for (i=0;i<numofrows;i++)
+		{
+		if(oTR==oBlock.rows[i]) iRow=i;
+		}	
+	
+	var numofcols = oBlock.rows[0].cells.length //num of cols
+	
+	var elRow;
+	if(type=="above") elRow = oBlock.insertRow(iRow); //insert above
+	if(type=="below") elRow = oBlock.insertRow(iRow+1); //insert below
+	
+	for (i=0;i<numofcols;i++)
+		{
+		try
+			{
+			var elCell = elRow.insertCell()
+			elCell.innerHTML = "&nbsp;"
+			}
+		catch(e)
+			{}
+		}	
+	}
+function TableDeleteRow()
+	{
+	var oSel = oSel_Table
+	var oBlock = (oSel.parentElement != null ? GetElement(oSel.parentElement(),"TABLE") : GetElement(oSel.item(0),"TABLE"))
+	var oTR = (oSel.parentElement != null ? GetElement(oSel.parentElement(),"TR") : GetElement(oSel.item(0),"TR"))	
+
+	try
+		{
+		var iRow;
+		for (var i=0;i<oBlock.rows.length;i++) //num of rows
+			{
+			if(oTR==oBlock.rows[i])oBlock.deleteRow(i);
+			}
+		}
+	catch(e)
+		{
+		return;
+		}
+	}
+function TableInsertCol(type)
+	{
+	var oSel = oSel_Table
+	var oBlock = (oSel.parentElement != null ? GetElement(oSel.parentElement(),"TABLE") : GetElement(oSel.item(0),"TABLE"))
+
+	//Di row yg aktif, dia ada di col mana ?
+	var oTD = (oSel.parentElement != null ? GetElement(oSel.parentElement(),"TD") : GetElement(oSel.item(0),"TD"))	
+	var iCol;
+	iCol = oTD.cellIndex; //insert left
+	if(type=="right") iCol=iCol+1; //insert right
+		
+		
+	var numofrows = oBlock.rows.length; //num of rows
+	for (var i=0;i<numofrows;i++) //num of rows
+		{
+		try
+			{
+			var elCell = oBlock.rows[i].insertCell(iCol) 
+			elCell.innerHTML = "&nbsp;"
+			}
+		catch(e)
+			{}		
+		}	
+	}
+function TableDeleteCol()
+	{
+	var oSel = oSel_Table
+	var oBlock = (oSel.parentElement != null ? GetElement(oSel.parentElement(),"TABLE") : GetElement(oSel.item(0),"TABLE"))
+	var oTD = (oSel.parentElement != null ? GetElement(oSel.parentElement(),"TD") : GetElement(oSel.item(0),"TD"))	
+	try
+		{
+		//Dia ada di row mana ?
+		var iRow;
+		var oTR = (oSel.parentElement != null ? GetElement(oSel.parentElement(),"TR") : GetElement(oSel.item(0),"TR"))	
+		for (var i=0;i<oBlock.rows.length;i++) //num of rows
+			{
+			if(oTR==oBlock.rows[i]) iRow=i;
+			}	
+		//Di row yg aktif, dia ada di col mana ?
+		var iCol = oTD.cellIndex;
+		for (var i=0;i<oBlock.rows.length;i++) //num of rows
+			{
+			oBlock.rows[i].deleteCell(iCol);
+			}
+		}
+	catch(e)
+		{
+		return;
+		}					
+	}
+function TableDeleteCell()
+	{
+	var oSel = oSel_Table
+	var oBlock = (oSel.parentElement != null ? GetElement(oSel.parentElement(),"TABLE") : GetElement(oSel.item(0),"TABLE"))
+	var oTD = (oSel.parentElement != null ? GetElement(oSel.parentElement(),"TD") : GetElement(oSel.item(0),"TD"))	
+	try
+		{
+		//Dia ada di row mana ?
+		var iRow;
+		var oTR = (oSel.parentElement != null ? GetElement(oSel.parentElement(),"TR") : GetElement(oSel.item(0),"TR"))	
+		for (var i=0;i<oBlock.rows.length;i++) //num of rows
+			{
+			if(oTR==oBlock.rows[i]) iRow=i;
+			}	
+		//Di row yg aktif, dia ada di col mana ?
+		var iCol = oTD.cellIndex;
+		oBlock.rows[iRow].deleteCell(iCol);
+		}
+	catch(e)
+		{
+		return;
+		}
+	}
+function TableColSpan()
+	{
+	var oSel = oSel_Table
+	var oTD = (oSel.parentElement != null ? GetElement(oSel.parentElement(),"TD") : GetElement(oSel.item(0),"TD"))	
+	oTD.colSpan = 2;
+	}
+function TableRowSpan()
+	{
+	var oSel = oSel_Table
+	var oTD = (oSel.parentElement != null ? GetElement(oSel.parentElement(),"TD") : GetElement(oSel.item(0),"TD"))	
+	oTD.rowSpan = 2;
+	}
+</script>
+
+
+<div id="tablebox" style="position:absolute;display:none;">
+<table border="0" cellpadding="0" cellspacing="0" style="TABLE-LAYOUT: fixed" bgcolor=Gainsboro ID="Table11">
+<col width=410><col width=18>
+<tr>
+<td>
+	<DIV class="bar" style="PADDING-LEFT: 5px;Z-INDEX: 10; POSITION: relative;">
+	<font color=white><b>Create/Edit Table</b></font></DIV>
+</td>
+<td style="cursor:hand" onclick="tablebox.style.display='none'">
+	<DIV class="bar" style="PADDING-LEFT: 5px;Z-INDEX: 10; POSITION: relative;">
+	<font color=white><b>X</b></font></DIV>
+</td>
+</tr>
+<tr>
+<td colspan=2 style="BORDER-LEFT: #336699 1px solid;BORDER-RIGHT: #336699 1px solid;BORDER-BOTTOM: #336699 1px solid;">
+	
+	<table border="0" cellpadding="4" cellspacing="2" style="TABLE-LAYOUT: fixed" align=center ID="Table12">
+	<col width=408>
+	<tr>
+	<td valign=center>
+	
+
+		<table border=0 style="table-layout:fixed" bgcolor=Gainsboro width=402 height=20 cellpadding=0 cellspacing=0 ID="Table13">
+		<col width=120><col width=120><col width=120><col width=42>
+		<tr>
+		<td align=center id="tab1" style="border-top: darkgray 1px solid; border-left: darkgray 1px solid;">
+			&nbsp;
+		</td>
+		<td align=center id="tab2" style="border-top: darkgray 1px solid; border-left: darkgray 1px solid;">
+			&nbsp;
+		</td>
+		<td align=center id="tab3" style="border-top: darkgray 1px solid; border-left: darkgray 1px solid;  border-right: darkgray 1px solid;">
+			&nbsp;
+		</td>
+		<td style="border-bottom: darkgray 1px solid;">&nbsp;</td>		
+		</tr>
+		</table>
+
+		
+		<!-- Insert Table Panel -->
+		<div id="idInsertTable">
+		<table border=0 style="table-layout:fixed" width=390 cellpadding=2 cellspacing=2 bgcolor="#ececec" style="border-left: darkgray 1px solid; border-bottom: darkgray 1px solid; border-right: darkgray 1px solid;" ID="Table14">
+		<col width=80><col width=115><col width=80><col width=115>
+		
+		<tr><td>Rows:</td>
+			<td><INPUT type="text" id=inpRows name=inpRows size=2 value=2></td>
+			<td>Columns:</td>
+			<td><INPUT type="text" id=inpCols name=inpCols size=2 value=2></td></tr>
+
+		<tr><td>Width:</td>
+			<td><INPUT type="text" id="inpWidth" name=inpWidth size=2>
+			<SELECT ID="inpWidthMe" NAME="inpWidthMe">
+				<OPTION value="">pixels</OPTION>
+				<OPTION value="%">percent</OPTION>
+			</SELECT>
+			</td>	
+			<td>Height:</td>
+			<td><INPUT type="text" id="inpHeight" name=inpHeight size=2>
+			<SELECT ID="Select2" NAME="inpHeightMe">
+				<OPTION value="">pixels</OPTION>
+				<OPTION value="%">percent</OPTION>
+			</SELECT>			
+			</td></tr>	
+			
+		<tr><td colspan=4>Background Color:
+			<INPUT type="text" id="inpBgColor" name=inpBgColor size=6>
+			<INPUT type="button" onclick="displayBgColor()" value="Pick" ID="Button3" NAME="Button3">
+			</td></tr>			
+		<tr><td colspan=4>
+			<div id="divBgColorPick" style="display:none"></div>			
+			</td></tr>
+		<script language=javascript>
+		function displayBgColor()
+			{
+			if(divBgColorPick.style.display=="none")
+				{
+				//check if it was already written
+				if(divBgColorPick.innerHTML=="")
+					{
+					//if not written yet, then write
+					divBgColorPick.innerHTML = writeColorPicker("inpBgColorPick","inpBgColor.value=inpBgColorPick.value",1);
+					//set default color
+					setDefaultColor("inpBgColorPick",inpBgColor.value)
+					}
+				else
+					{
+					//already written
+					//set default color
+					setDefaultColor("inpBgColorPick",inpBgColor.value)
+					}
+				//display
+				divBgColorPick.style.display="block"
+				}
+			else
+				{
+				//hide
+				divBgColorPick.style.display='none'
+				}
+			}
+		</script>				
+			
+		<tr><td colspan=4>Background Image URL:
+			<INPUT type="text" id=inpBgImage name=inpBgImage size=30></td></tr>			
+				
+		<tr><td>Border Size:</td>
+			<td><INPUT type="text" id=inpBorder name=inpBorder size=2 value=1></td>						
+			<td>Alignment:</td>
+			<td>
+			<SELECT ID="inpTblAlign" NAME="inpTblAlign">
+				<OPTION value=""></OPTION>
+				<OPTION value="left">Left</OPTION>
+				<OPTION value="center">Center</OPTION>
+				<OPTION value="right">Right</OPTION>
+			</SELECT>
+			</td></tr>	
+			
+		<tr><td colspan=4>Border Color:
+			<INPUT type="text" id=inpBorderColor name=inpBorderColor size=6 value="#000000">
+			<INPUT type="button" onclick="displayBorderColor()" value="Pick" ID="Button4" NAME="Button4">
+			</td></tr>
+		<tr><td colspan=4>
+			<div id="divBorderColorPick" style="display:none"></div>			
+			</td></tr>
+		<script language=javascript>
+		function displayBorderColor()
+			{
+			if(divBorderColorPick.style.display=="none")
+				{
+				//check if it was already written
+				if(divBorderColorPick.innerHTML=="")
+					{
+					//if not written yet, then write
+					divBorderColorPick.innerHTML = writeColorPicker("inpBorderColorPick","inpBorderColor.value=inpBorderColorPick.value",1);
+					//set default color
+					setDefaultColor("inpBorderColorPick",inpBorderColor.value)
+					}
+				else
+					{
+					//already written
+					//set default color
+					setDefaultColor("inpBorderColorPick",inpBorderColor.value)
+					}
+				//display
+				divBorderColorPick.style.display="block"
+				}
+			else
+				{
+				//hide
+				divBorderColorPick.style.display='none'
+				}
+			}
+		</script>			
+													
+		<tr><td>Cell Padding:</td>
+			<td><INPUT type="text" id=inpPadding name=inpPadding size=2 value=0></td>
+			<td>Cell Spacing:</td>
+			<td><INPUT type="text" id=inpSpacing name=inpSpacing size=2 value=0></td></tr>
+		
+		<tr><td colspan=4><hr></td></tr>
+
+		<tr><td>&nbsp;</td>
+			<td align=right><INPUT type="button" value="Cancel" onclick="tablebox.style.display='none';" ID="Button2" NAME="Button2"></td>
+			<td><INPUT type="button" value="&nbsp;&nbsp;OK&nbsp;&nbsp;" onclick="if(TableInsert())tablebox.style.display='none';" ID="Button5" NAME="Button5"></td>
+			<td>&nbsp;</td></tr>
+		</table>
+		</div>
+		<!-- /Insert Table Panel -->
+		
+		<!-- Edit Table Panel -->
+		<div id="idEditTable" align=left style="display:none">
+		<table border=0 style="table-layout:fixed" width=390 cellpadding=2 cellspacing=2 bgcolor="#ececec" style="border-left: darkgray 1px solid; border-bottom: darkgray 1px solid; border-right: darkgray 1px solid;" ID="Table15">
+		<col width=80><col width=115><col width=80><col width=115>
+		
+		<tr><td colspan=4>Background Color:
+			<INPUT type="text" id="inpBgColor2" name=inpBgColor2 size=6>
+			<INPUT type="button" onclick="displayBgColor2()" value="Pick" ID="Button6" NAME="Button1">
+			</td></tr>			
+		<tr><td colspan=4>
+			<div id="divBgColor2Pick" style="display:none"></div>			
+			</td></tr>
+		<script language=javascript>
+		function displayBgColor2()
+			{
+			if(divBgColor2Pick.style.display=="none")
+				{
+				//check if it was already written
+				if(divBgColor2Pick.innerHTML=="")
+					{
+					//if not written yet, then write
+					divBgColor2Pick.innerHTML = writeColorPicker("inpBgColor2Pick","inpBgColor2.value=inpBgColor2Pick.value",1);
+					//set default color
+					setDefaultColor("inpBgColor2Pick",inpBgColor2.value)
+					}
+				else
+					{
+					//already written
+					//set default color
+					setDefaultColor("inpBgColor2Pick",inpBgColor2.value)
+					}
+				//display
+				divBgColor2Pick.style.display="block"
+				}
+			else
+				{
+				//hide
+				divBgColor2Pick.style.display='none'
+				}
+			}
+		</script>
+			
+		<tr><td colspan=4>Background Image URL:
+			<INPUT type="text" id=inpBgImage2 name=inpBgImage2 size=30></td></tr>
+
+		<tr><td>Width:</td>
+			<td><INPUT type="text" id="inpWidth2" name=inpWidth2 size=2>
+			<SELECT ID="inpWidth2Me" NAME="inpWidth2Me">
+				<OPTION value="">pixels</OPTION>
+				<OPTION value="%">percent</OPTION>
+			</SELECT>			
+			</td>
+			<td>Height:</td>
+			<td><INPUT type="text" id="inpHeight2" name=inpHeight2 size=2>
+			<SELECT ID="Select1" NAME="inpHeight2Me">
+				<OPTION value="">pixels</OPTION>
+				<OPTION value="%">percent</OPTION>
+			</SELECT>			
+			</td></tr>	
+			
+		<tr><td>Cell Padding:</td>
+			<td><INPUT type="text" id=inpPadding2 name=inpPadding2 size=2 value=0></td>
+			<td>Cell Spacing:</td>
+			<td><INPUT type="text" id=inpSpacing2 name=inpSpacing2 size=2 value=0></td></tr>
+			
+		<tr><td>Border Size:</td>
+			<td><INPUT type="text" id=inpBorder2 name=inpBorder2 size=2 value=1></td>
+			<td>Alignment :</td>
+			<td>
+			<SELECT ID="inpTblAlign2" NAME="inpTblAlign2">
+				<OPTION value="left">Left</OPTION>
+				<OPTION value="center">Center</OPTION>
+				<OPTION value="right">Right</OPTION>
+			</SELECT>
+			</td></tr>
+			
+		<tr><td colspan=4>Border Color:
+			<INPUT type="text" id="inpBorderColor2" name=inpBorderColor2 size=6>
+			<INPUT type="button" onclick="displayBorderColor2()" value="Pick" ID="Button7" NAME="Button7">
+			</td></tr>	
+		<tr><td colspan=4>
+			<div id="divBorderColor2Pick" style="display:none"></div>			
+			</td></tr>
+		<script language=javascript>
+		function displayBorderColor2()
+			{
+			if(divBorderColor2Pick.style.display=="none")
+				{
+				//check if it was already written
+				if(divBorderColor2Pick.innerHTML=="")
+					{
+					//if not written yet, then write
+					divBorderColor2Pick.innerHTML = writeColorPicker("inpBorderColor2Pick","inpBorderColor2.value=inpBorderColor2Pick.value",1);
+					//set default color
+					setDefaultColor("inpBorderColor2Pick",inpBorderColor2.value)
+					}
+				else
+					{
+					//already written
+					//set default color
+					setDefaultColor("inpBorderColor2Pick",inpBorderColor2.value)
+					}
+				//display
+				divBorderColor2Pick.style.display="block"
+				}
+			else
+				{
+				//hide
+				divBorderColor2Pick.style.display='none'
+				}
+			}
+		</script>			
+
+		<tr><td colspan=4><hr></td></tr>
+		
+		<tr><td>&nbsp;</td>
+			<td align=right><INPUT type="button" value="Cancel" onclick="tablebox.style.display='none';" id="Button8" name=button1></td>
+			<td><INPUT type="button" value="&nbsp;&nbsp;OK&nbsp;&nbsp;" onclick="if(TableUpdate())tablebox.style.display='none';" id="Button9" name=button1></td>
+			<td>&nbsp;</td></tr>
+		</table>
+		</div>
+		<!-- /Edit Table Panel -->
+
+		<!-- Edit Cell Panel -->
+		<div id="idEditCell" align=left style="display:none">
+		<table border=0 style="table-layout:fixed" width=390 cellpadding=2 cellspacing=2 bgcolor="#ececec" style="border-left: darkgray 1px solid; border-bottom: darkgray 1px solid; border-right: darkgray 1px solid;" ID="Table16">
+		<col width=80><col width=115><col width=80><col width=115>
+
+		<tr><td colspan=4>Cell Background Color :
+			<INPUT type="text" id="inpCellBgColor" name=inpCellBgColor size=6>
+			<INPUT type="button" onclick="displayCellBgColor()" value="Pick" ID="Button10" NAME="Button1">
+			</td></tr>			
+		<tr><td colspan=4>
+			<div id="divCellBgColorPick" style="display:none"></div>			
+			</td></tr>
+		<script language=javascript>
+		function displayCellBgColor()
+			{
+			if(divCellBgColorPick.style.display=="none")
+				{
+				//check if it was already written
+				if(divCellBgColorPick.innerHTML=="")
+					{
+					//if not written yet, then write
+					divCellBgColorPick.innerHTML = writeColorPicker("inpCellBgColorPick","inpCellBgColor.value=inpCellBgColorPick.value",1);
+					//set default color
+					setDefaultColor("inpCellBgColorPick",inpCellBgColor.value)
+					}
+				else
+					{
+					//already written
+					//set default color
+					setDefaultColor("inpCellBgColorPick",inpCellBgColor.value)
+					}
+				//display
+				divCellBgColorPick.style.display="block"
+				}
+			else
+				{
+				//hide
+				divCellBgColorPick.style.display='none'
+				}
+			}
+		</script>			
+					
+		<tr><td colspan=4>Cell Background Image URL :
+			<INPUT type="text" id="inpCellBgImage" name=inpCellBgImage size=30></td></tr>	
+			
+		<tr><td>Cell Width :</td>
+			<td><INPUT type="text" id="inpCellWidth" name=inpCellWidth size=2>
+			<SELECT ID="inpCellWidthMe" NAME="inpCellWidthMe">
+				<OPTION value="">pixels</OPTION>
+				<OPTION value="%">percent</OPTION>
+			</SELECT>			
+			</td>
+			<td>Cell Height :</td>
+			<td><INPUT type="text" id="inpCellHeight" name=inpCellHeight size=2>
+			<SELECT ID="inpCellHeightMe" NAME="inpCellHeightMe">
+				<OPTION value="">pixels</OPTION>
+				<OPTION value="%">percent</OPTION>
+			</SELECT>			
+			</td></tr>	
+						
+		<tr><td>Alignment :</td>
+			<td>
+			<SELECT ID="inpCellAlign" NAME="inpCellAlign">
+				<OPTION value="left">Left</OPTION>
+				<OPTION value="center">Center</OPTION>
+				<OPTION value="right">Right</OPTION>
+			</SELECT>
+			</td>
+			<td colspan=2>Vertical Alignment :
+			<SELECT ID="inpCellVAlign" NAME="inpCellVAlign">
+				<OPTION value="top">Top</OPTION>
+				<OPTION value="middle">Middle</OPTION>
+				<OPTION value="bottom">Bottom</OPTION>
+			</SELECT>
+			</td></tr>	
+		
+		<tr><td>Wrap Text :</td>
+			<td><INPUT type="checkbox" ID="inpCellWrap" NAME="inpCellWrap"></td>
+			<td colspan=2></td></tr>
+
+		<tr><td>Insert Row:</td>
+			<td colspan=3>
+			<INPUT style="width=95" type="button" onclick="TableInsertRow('above');tablebox.style.display='none';" value="Above" id="btnInsertRow" NAME="btnInsertRow">
+			<INPUT style="width=95" type="button" onclick="TableInsertRow('below');tablebox.style.display='none';" value="Below" id="Button11" NAME="btnInsertRow">
+			</td></tr>
+		<tr><td>Insert Column:</td>
+			<td colspan=3>
+			<INPUT style="width=95" type="button" onclick="TableInsertCol('left');tablebox.style.display='none';" value="to the Left" id="btnInsertColumn" NAME="btnInsertColumn">
+			<INPUT style="width=95" type="button" onclick="TableInsertCol('right');tablebox.style.display='none';" value="to the Right" id="Button12" NAME="btnInsertColumn">
+			</td></tr>
+		
+		<tr><td>Delete:</td>
+			<td colspan=3>
+			<INPUT style="width=95" type="button" onclick="TableDeleteRow();tablebox.style.display='none';" value="Delete Row" id="btnDeleteRow" NAME="btnDeleteRow">
+			<INPUT style="width=95" type="button" onclick="TableDeleteCol();tablebox.style.display='none';" value="Delete Column" id="btnDeleteColumn" NAME="btnDeleteColumn">
+			<INPUT style="width=95" type="button" onclick="TableDeleteCell();tablebox.style.display='none';" value="Delete Cell" id="btnDeleteCell" NAME="btnDeleteCell">
+			</td></tr>
+
+		<tr><td>Span:</td>
+			<td colspan=3>
+			<INPUT style="width=95" type="button" onclick="TableColSpan();tablebox.style.display='none';" value="Columns Span" id="btnColumnsSpan" NAME="btnColumnsSpan">
+			<INPUT style="width=95" type="button" onclick="TableRowSpan();tablebox.style.display='none';" value="Rows Span" id="btnRowsSpan" NAME="btnRowsSpan">
+			</td></tr>
+		
+		<tr><td colspan=4><hr></td></tr>
+			
+		<tr><td>&nbsp;</td>
+			<td align=right><INPUT type="button" value="Cancel" onclick="tablebox.style.display='none';" ID="Button13" NAME="Button13"></td>
+			<td><INPUT type="button" value="&nbsp;&nbsp;OK&nbsp;&nbsp;" onclick="if(CellUpdate())tablebox.style.display='none';" ID="Button14" NAME="Button14"></td>
+			<td>&nbsp;</td></tr>
+			
+		</table>
+		</div>
+		<!-- /Edit Cell Panel -->
+	
+	
+	</td>
+	</tr>
+	</table>
+
+</td>
+</tr>
+</table>
+</div>
+<!-- /Table box -->
+
+
+<!-- Style box -->
+<script language=javascript>
+function InitStyle()
+	{
+	var val;
+	var sHTML = "<table align=center border=0 width=100% height=100% cellpadding=0 cellspacing=0>";
+	for(var i=0;i<document.styleSheets(0).rules.length;i++)
+		{
+		h=document.styleSheets(0).rules.item(i).selectorText
+		var selArr = h.split(".")
+		var itemCount = selArr.length
+		//alert(h + " " + itemCount)
+		if(itemCount>1)
+			{
+			val = selArr[1]
+			}
+		else
+			{
+			val = h
+			}
+		sHTML += "<tr onclick=\"applyStyle('"+val+"');stylebox.style.display='none'\" onmouseover=\"this.style.color='tomato'\" onmouseout=\"this.style.color='black'\" style=\"cursor:'hand'\"><td align=\"center\"><span class=\""+val+"\">" + val + "</span></td></tr>";
+		}	
+	sHTML += "</table>"
+	divStyle.innerHTML = sHTML;
+	}
+	
+function applyStyle(Style)
+	{
+	//get selection
+	idContent.focus()
+	var oSel	= document.selection.createRange()
+	var sType = document.selection.type
+	//if (sType!="Control"&&sType!="None")
+	if(oSel.parentElement != null)//yg dipilih text bukan control
+		{
+		sApplied = "<font class='"+Style+"'>"+oSel.text+"</font>"
+		oSel.pasteHTML(sApplied)
+		}
+	}
+function displayStyleBox()
+	{
+	PopupHide()
+	stylebox.style.display='block';
+	setPosition()
+	}
+</script>
+<div id="stylebox" style="position:absolute;display:none;">
+	<table border="0" cellpadding="0" cellspacing="0" style="table-layout: fixed" bgcolor="Gainsboro" ID="Table17">
+	<col width="230">
+	<col width="13">
+	<tr>
+	<td>
+			<div class="bar" style="padding-left: 5px;">
+			<font size="2" face="tahoma" color="white"><b>Select Style (from CSS)</b></font>
+			</div>
+	</td>
+	<td style="cursor:hand" onclick="stylebox.style.display='none'">
+			<div class="bar">
+			<font size="2" face="tahoma" color="white"><b>X</b></font>
+			</div>
+	</td>
+	</tr>
+	<tr>
+	<td colspan="2" style="border-left: #336699 1px solid;border-right: #336699 1px solid;border-bottom: #336699 1px solid;">
+			<br>
+			<div id="divStyle"></div>
+			<br>
+	</td>
+	</tr>
+	</table>
+</div>
+<!-- /Style box -->
+
+
+<!-- Symbol box -->
+<style>
+.cellSymbol
+	{
+	border:solid windowtext 1.0pt;
+  	border-left:none;
+  	padding:0in 2pt 0in 2pt
+	font-size:10pt;
+	font-family:"Tahoma";  	
+	}
+</style>
+<script language=javascript>
+function writeSymbol()
+	{
+	var s1 = new Array("&nbsp;","!","&quot;","#","$","%","&amp;","'","(",")","*","+",",","-",".","/","0","1","2","3","4","5","6","7","8","9",":",";","&lt;","=","&gt;","?")
+	var s2 = new Array("@","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","[","\\","]","^","_")
+	var s3 = new Array("`","a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","{","|","}","~","&#9633;")
+	var s4 = new Array("€","&#9633;","‚","ƒ","„","…","†","‡","ˆ","‰","Š","‹","Œ","&#9633;","Ž","&#9633;","&#9633;","&#8242;","&#8242;","&#8243;","&#8243;","•","–","—","˜","™","š","›","œ","&#9633;","ž","Ÿ")
+	var s5 = new Array("&nbsp;","¡","¢","£","¤","¥","¦","§","¨","©","ª","«","¬","­","®","¯","°","±","²","³","´","µ","¶","·","¸","¹","º","»","¼","½","¾","¿")
+	var s6 = new Array("À","Á","Â","Ã","Ä","Å","Æ","Ç","È","É","Ê","Ë","Ì","Í","Î","Ï","Ð","Ñ","Ò","Ó","Ô","Õ","Ö","×","Ø","Ù","Ú","Û","Ü","Ý","Þ","ß")
+	var s7 = new Array("à","á","â","ã","ä","å","æ","ç","è","é","ê","ë","ì","í","î","ï","ð","ñ","ò","ó","ô","õ","ö","÷","ø","ù","ú","û","ü","ý","þ","ÿ")
+	var sHTML="";
+	sHTML += "<table border=1 cellspacing=0 cellpadding=0 style=\"border-collapse:collapse;border:none;border-left:'solid windowtext 1.0pt'\">"
+	for(var i=1;i<=7;i++)
+		{
+		sHTML += "<tr>"
+		for(var j=0;j<32;j++)
+			{
+			sHTML += "<td class=cellSymbol align=center onclick=\"insertSymbol(this.innerText);symbolbox.style.display='none';\" onmouseover=\"this.style.color='tomato'\" onmouseout=\"this.style.color='black'\" style=\"cursor:hand\">" + eval("s"+i)[j] + "</td>"
+			}
+		sHTML += "</tr>"
+		}
+	sHTML += "</table>"
+	return sHTML;
+	}
+function insertSymbol(Symbol)
+	{
+	idContent.focus()
+	var oSel	= document.selection.createRange()
+	oSel.select()//tambahan
+	if(oSel.parentElement)//yg dipilih text bukan control
+		oSel.pasteHTML(Symbol)
+	}
+function displaySymbolBox()
+	{
+	PopupHide()
+	
+	if(divSymbol.innerHTML=="")
+		{
+		divSymbol.innerHTML=writeSymbol();
+		
+		for (i=0; i<divSymbol.all.length; i++)
+			divSymbol.all(i).unselectable = "on";		
+		}
+	
+	symbolbox.style.display='block';
+	setPosition()	
+	}
+</script>
+<div id="symbolbox" style="position:absolute;display:none;">
+	<table border="0" cellpadding="0" cellspacing="0" style="table-layout: fixed" bgcolor="Gainsboro" ID="Table18">
+	<col width="560">
+	<col width="13">
+	<tr>
+	<td>
+			<div class="bar" style="padding-left: 5px;">
+			<font size="2" face="tahoma" color="white"><b>Select Symbol</b></font>
+			</div>
+	</td>
+	<td style="cursor:hand" onclick="symbolbox.style.display='none'">
+			<div class="bar">
+			<font size="2" face="tahoma" color="white"><b>X</b></font>
+			</div>
+	</td>
+	</tr>
+	<tr>
+	<td colspan="2" align=center style="border-left: #336699 1px solid;border-right: #336699 1px solid;border-bottom: #336699 1px solid;">
+			<br>
+			<div id="divSymbol"></div>
+			<br>
+	</td>
+	</tr>
+	</table>
+</div>
+<!-- /Symbol box -->
+
+</BODY>
+</HTML>
