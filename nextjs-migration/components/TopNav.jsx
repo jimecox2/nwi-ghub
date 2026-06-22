@@ -14,7 +14,7 @@ export default function TopNav() {
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <Link href="/" className="flex items-center gap-2">
           <Image
-            src="/images/bm_logo.gif"
+            src="/images/nwi-logo.jpg"
             alt="Northern Wireless Inc."
             width={180}
             height={85}
