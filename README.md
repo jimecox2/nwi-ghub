@@ -86,8 +86,6 @@ route** — no catch-all route or data layer needed. For example
 | `/links` | Links |
 | `/links/vendors` | Vendors We Use |
 | `/links/wireless-information` | Wireless Information |
-| `/newsletters` | Newsletter Headlines |
-| `/proposals` | Proposals |
 
 ## Notes / dropped content
 
@@ -98,5 +96,7 @@ route** — no catch-all route or data layer needed. For example
 - The legacy `admin/` ASP CMS, the `.mdb` databases, and the guestbook/users
   tables are intentionally not migrated — the content they produced is now
   static MDX.
-- A few pages (Bandwidth Control, FAQ, Proposals) were already "coming soon"
-  stubs on the old site; they're preserved as short placeholders.
+- A few pages (Bandwidth Control, FAQ) were already "coming soon" stubs on the
+  old site; they're preserved as short placeholders.
+- The legacy Newsletters and Proposals pages were intentionally dropped from
+  this baseline.
