@@ -10,13 +10,15 @@ change-password work.
 Set these in `.env.local` (copy from `.env.example`):
 
 ```
-STRAPI_URL=https://your-strapi-url.com
+STRAPI_URL=https://be2.timebars.com
 STRAPI_JWT_SECRET=your-jwt-secret
 ```
 
-- `STRAPI_URL` — base URL of your Strapi instance, no trailing slash. It is
-  exposed to the browser (via `next.config.mjs`) because auth calls run client
-  side.
+- `STRAPI_URL` — **bare origin only**: do NOT include the `/api` path and do NOT
+  add a trailing slash. The code appends `/api/...` itself (e.g.
+  `/api/auth/local`), so `https://be2.timebars.com/api` would produce
+  `/api/api/...` 404s. It is exposed to the browser (via `next.config.mjs`)
+  because auth calls run client side.
 - `STRAPI_JWT_SECRET` — Strapi's JWT signing secret. **Server-only.** Used by
   `/api/auth/verify` for optional offline signature checks. It must match the
   secret Strapi signs tokens with (in your Strapi project this is typically the
