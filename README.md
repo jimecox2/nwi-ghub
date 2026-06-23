@@ -1,4 +1,21 @@
-# Northern Wireless → Next.js migration bundle
+
+# Cheat sheet
+## Simple steps deploy prod on lser
+
+git pull
+docker stop nwi && docker rm nwi  
+docker rmi jimecox807/nwi:latest   
+./deploy-push-to-hub-secure.sh
+
+## on prod tbdovm
+ssh jcox@tbdovm
+cd /home/jcox/docker/nwi
+./deploy.sh
+
+
+
+
+# Original Ask to create from ASP site → Next.js migration bundle
 
 This folder is a drop-in content + navigation bundle extracted from the legacy
 classic-ASP site. The old site stored its pages as `.asp` files (content wrapped
