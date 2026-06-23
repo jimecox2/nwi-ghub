@@ -3,3 +3,6 @@
 /out
 npm-debug.log*
 .DS_Store
+
+# Local env files with real secrets (.env.example stays tracked)
+.env*.local
