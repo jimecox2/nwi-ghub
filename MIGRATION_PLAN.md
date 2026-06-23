@@ -7,12 +7,52 @@ and continue without re-deriving context.
 
 ## Status checklist
 
-- [ ] Step 1 — Old files staged in `migration-staging/` on the branch
-- [ ] Step 2 — Audit report (file map, auth swaps, new deps, risks)
-- [ ] Step 3 — Mapping approved
-- [ ] Step 4 — Migrate in batches (build after each)
-- [ ] Step 5 — Delete `migration-staging/`, final build, PR, merge
-- [ ] Step 6 — Refine CLAUDE.md to reflect the new dashboard
+- [x] Step 1 — Old files staged (now at top-level `migration-staging/`, moved
+      out of `app/` so Next does not compile them as routes)
+- [x] Step 2 — Audit done (see "Audit findings" below)
+- [ ] Step 3+ — DEFERRED. Decision: keep staged files as **read-only
+      reference** and rebuild the dashboard fresh to new requirements in future
+      sessions. No wholesale port.
+
+## Audit findings (2026, Next 14 → 16 reference dashboard)
+
+The staged set is **only the top layer** of a much larger app. The 30 staged
+files reference modules and packages that were NOT included:
+
+**Missing internal modules (13):** `lib/crud/coreCrud`,
+`lib/crud/pubsetDataFetcher` (the whole Strapi data layer — `getUserByEmail`,
+`getAllDashboardSources`, `getActiveDashboardSource`, RBAC by `Customer_id`),
+`components/ui/card`, `components/ui/table` (shadcn/ui),
+`components/Dashboard/Reports/ItemDetailsDataTable`,
+`components/Dashboard/Graphs/BurndownChart`,
+`components/Dashboard/Charts/ResourceUsageChart`,
+`components/Dashboard/Charts/ResourceCostUsagePie`,
+`components/Dashboard/Cards/{TabsBelowCardsComponent,IndicatorCards,CollapsibleCardLights}`,
+`app/dashboard/_hooks/useEnterpriseDashboardSource` (imported by 18 pages),
+`auth/auth` (NextAuth config).
+
+**Missing npm packages (4):** `lucide-react`, `recharts`, `moment`, `next-auth`.
+
+**Auth model is incompatible.** The old dashboard uses **NextAuth server
+sessions**: `layout.jsx` / `page.jsx` are `async` server components calling
+`await auth()`, reading `session.jwt`, redirecting server-side; report pages use
+`useSession()` + `session.jwt` for data calls; the header uses `signOut()`.
+This site has **no NextAuth and no cookie** — the token lives in client memory
+(Zustand), invisible to server components. Any rebuild must use
+`useAuthStore` + `AuthGuard` (client-side) and read the Bearer token from the
+store; see CLAUDE.md.
+
+**Data shape (for reference):** dashboard "sources" carry a `tbmdjoined[]` array
+of items with fields like `tbType` (Portfolio/Project), `tbCost`, `tbBudget`,
+`tbWork`, `tbBaselineWork`, `tbMDStatus`, `tbRisk`, `tbIssuesOpen`, `tbStart`,
+`tbName`. RBAC roles seen: Administrator, Project Manager, Executive.
+
+## When rebuilding fresh (recommended next-session prompt)
+
+> Read CLAUDE.md and MIGRATION_PLAN.md. Treat `migration-staging/` as reference
+> only. Build a new `/dashboard/<x>` page to <new requirement>, using
+> `AuthGuard` + `useAuthStore` for auth and client-side Bearer fetches. Install
+> any needed deps (e.g. lucide-react, recharts).
 
 ## Working branch
 
