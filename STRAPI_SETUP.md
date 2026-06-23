@@ -51,6 +51,22 @@ In the Strapi admin:
 > create users from **Content Manager → User** instead. The `/register` page
 > will then return a 403 from Strapi.
 
+### Email confirmation
+
+If **Settings → Users & Permissions → Advanced settings → "Enable email
+confirmation"** is ON (recommended — it blocks unverified/malicious signups):
+
+- Register creates the user with `confirmed: false`, emails a confirmation
+  link, and returns **no JWT**. The `/register` page detects this and shows a
+  "check your email" screen instead of logging in; the user can't log in until
+  they click the link.
+- A **working email provider must be configured** in Strapi. If it isn't, the
+  confirmation send fails and the endpoint returns
+  `400 ApplicationError "Unauthorized"` (the mail provider's auth error bubbling
+  up) even though the user row was created. Configure
+  `@strapi/provider-email-nodemailer` (or SendGrid/Mailgun) and set the
+  confirmation redirect URL.
+
 ## 4. Enable change-password
 
 `change-password` runs as the **logged-in user**, so it is governed by the

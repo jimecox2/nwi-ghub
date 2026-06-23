@@ -17,6 +17,8 @@ export default function RegisterPage() {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  // Set once the account is created and a confirmation email has been sent.
+  const [pendingEmail, setPendingEmail] = useState("");
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -30,8 +32,18 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const { token, user } = await register({ username, email, password });
-      setAuth({ token, user });
-      router.push("/dashboard");
+
+      if (token) {
+        // Email confirmation is OFF in Strapi: we get a JWT, so sign in now.
+        setAuth({ token, user });
+        router.push("/dashboard");
+        return;
+      }
+
+      // Email confirmation is ON: Strapi creates the account (confirmed=false)
+      // and emails a confirmation link, but returns no JWT. The user must
+      // confirm before they can log in.
+      setPendingEmail(email);
     } catch (err) {
       setError(err.message || "Registration failed.");
     } finally {
@@ -39,12 +51,37 @@ export default function RegisterPage() {
     }
   }
 
+  // Post-registration confirmation screen.
+  if (pendingEmail) {
+    return (
+      <div className="mx-auto max-w-md">
+        <h1>Check your email</h1>
+        <p className="rounded-md bg-green-50 px-4 py-3 text-sm text-green-700">
+          Your account was created. We sent a confirmation link to{" "}
+          <strong>{pendingEmail}</strong>. Click the link in that email to
+          activate your account, then log in.
+        </p>
+        <p className="mt-4 text-sm text-gray-600">
+          Already confirmed?{" "}
+          <Link href="/login" className="text-blue-700 underline">
+            Log in
+          </Link>
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-md">
       <h1>Create account</h1>
 
+      <p className="not-prose rounded-md bg-blue-50 px-4 py-3 text-sm text-blue-800">
+        After you submit, we&apos;ll email you a confirmation link. You must
+        click it to activate your account before you can log in.
+      </p>
+
       {error && (
-        <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="mt-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </p>
       )}
