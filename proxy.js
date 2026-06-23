@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 
+// Next 16 renamed the "middleware" file convention to "proxy". This runs the
+// same best-effort route gate as before.
+
 // Routes that never require authentication.
 const PUBLIC_PATHS = ["/", "/login", "/register"];
 
@@ -7,11 +10,11 @@ const PUBLIC_PATHS = ["/", "/login", "/register"];
 const PROTECTED_PREFIXES = ["/dashboard"];
 
 // NOTE on the auth model: the JWT is held in client memory (Zustand) with no
-// cookie/localStorage, so middleware (which runs on the server/edge) cannot see
-// it on a normal navigation. Per the design, middleware does a best-effort
-// header check and otherwise FALLS THROUGH to the client-side guard
-// (AuthGuard + useAuth), which is the real enforcement layer.
-export function middleware(request) {
+// cookie/localStorage, so proxy (which runs on the server/edge) cannot see it
+// on a normal navigation. Per the design, proxy does a best-effort header check
+// and otherwise FALLS THROUGH to the client-side guard (AuthGuard + useAuth),
+// which is the real enforcement layer.
+export function proxy(request) {
   const { pathname } = request.nextUrl;
 
   if (PUBLIC_PATHS.includes(pathname)) {

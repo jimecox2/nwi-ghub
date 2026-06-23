@@ -1,10 +1,20 @@
 import createMDX from "@next/mdx";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Produce a self-contained .next/standalone build (server.js + minimal
   // node_modules) for a small production Docker image.
   output: "standalone",
+  // Pin the Turbopack workspace root to this project. Without it, Next 16 can
+  // infer the wrong root if a stray lockfile exists in a parent directory
+  // (e.g. ~/package-lock.json).
+  turbopack: {
+    root: __dirname,
+  },
   // Allow .mdx files to be treated as pages/routes.
   pageExtensions: ["js", "jsx", "ts", "tsx", "md", "mdx"],
   // The JWT lives in client memory, so auth fetches run in the browser and need

@@ -17,9 +17,13 @@ cd /home/jcox/docker/nwi
 Dev and production both listen on **port 3012** (`package.json` scripts and the
 Docker image agree).
 
+Built on **Next.js 16** (Turbopack) + **React 19**, which require **Node ≥ 20.9**
+(see `.nvmrc`). The Docker image uses `node:20-alpine`.
+
 ## Local
 
 ```bash
+nvm use                # picks Node 20 from .nvmrc
 npm install
 npm run dev            # http://localhost:3012
 ```
