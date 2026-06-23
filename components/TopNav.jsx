@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { nav } from "@/lib/nav";
+import AuthNav from "@/components/AuthNav";
 
 // Palette sampled from boatdealers.ca
 const NAVY_BAR =
@@ -83,6 +84,11 @@ export default function TopNav() {
           ))}
         </ul>
 
+        {/* Desktop auth control */}
+        <div className="hidden items-center nav:flex">
+          <AuthNav />
+        </div>
+
         {/* Mobile toggle */}
         <button
           type="button"
@@ -152,6 +158,10 @@ export default function TopNav() {
               )}
             </li>
           ))}
+          {/* Mobile auth control */}
+          <li className="px-5 py-4">
+            <AuthNav onNavigate={() => setMobileOpen(false)} />
+          </li>
         </ul>
       )}
     </header>
