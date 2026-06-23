@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import AuthGuard from "@/components/AuthGuard";
 import { changePassword } from "@/lib/auth";
 import { useAuthStore } from "@/store/authStore";
 
-function ChangePasswordContent() {
+// AuthGuard is applied by app/dashboard/layout.jsx for the whole subtree.
+export default function ChangePasswordPage() {
   const token = useAuthStore((s) => s.token);
   const setAuth = useAuthStore((s) => s.setAuth);
   const user = useAuthStore((s) => s.user);
@@ -50,8 +50,8 @@ function ChangePasswordContent() {
   }
 
   return (
-    <div className="mx-auto max-w-md">
-      <h1>Change password</h1>
+    <div className="container mx-auto max-w-md px-4 py-10">
+      <h1 className="text-2xl font-bold text-gray-900">Change password</h1>
 
       {error && (
         <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -64,7 +64,7 @@ function ChangePasswordContent() {
         </p>
       )}
 
-      <form onSubmit={handleSubmit} className="not-prose mt-6 space-y-4">
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
           <label htmlFor="current" className="block text-sm font-medium">
             Current password
@@ -127,13 +127,5 @@ function ChangePasswordContent() {
         </Link>
       </p>
     </div>
-  );
-}
-
-export default function ChangePasswordPage() {
-  return (
-    <AuthGuard>
-      <ChangePasswordContent />
-    </AuthGuard>
   );
 }
