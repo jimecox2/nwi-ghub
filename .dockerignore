@@ -1,0 +1,21 @@
+node_modules
+.next
+out
+npm-debug.log*
+
+# Never copy local secrets/env into the image
+.env
+.env.*
+
+# VCS / tooling
+.git
+.gitignore
+.DS_Store
+
+# Docs and dev-only files not needed at build time
+README.md
+STRAPI_SETUP.md
+temp.md
+deploy-push-to-hub-secure.sh
+Dockerfile
+.dockerignore

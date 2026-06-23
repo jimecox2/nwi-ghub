@@ -12,7 +12,47 @@ ssh jcox@tbdovm
 cd /home/jcox/docker/nwi
 ./deploy.sh
 
+# Running the app
 
+Dev and production both listen on **port 3012** (`package.json` scripts and the
+Docker image agree).
+
+## Local
+
+```bash
+npm install
+npm run dev            # http://localhost:3012
+```
+
+Set local env in `.env.local` (copy from `.env.example`):
+
+```
+STRAPI_URL=https://be2.timebars.com   # bare origin: no /api path, no trailing slash
+STRAPI_JWT_SECRET=your-jwt-secret      # server-only
+```
+
+## Docker
+
+The image is a Next.js **standalone** build (`output: "standalone"`).
+
+- `STRAPI_URL` is inlined into the client bundle at **build time**, so it is a
+  **build arg**.
+- `STRAPI_JWT_SECRET` is server-only and read at **runtime**, so it is a
+  **runtime env var** (never baked into the image).
+
+```bash
+# Build (bakes the public Strapi URL into the client bundle)
+docker build --build-arg STRAPI_URL=https://be2.timebars.com -t jimecox807/nwi:latest .
+
+# Run (provide the secret at runtime)
+docker run -p 3012:3012 -e STRAPI_JWT_SECRET=your-jwt-secret jimecox807/nwi:latest
+```
+
+`./deploy-push-to-hub-secure.sh` reads `STRAPI_URL` / `DOCKER_PAT` from `.env`
+(or prompts) and passes the build arg for you.
+
+> Because `STRAPI_URL` is baked at build time, changing the Strapi URL requires a
+> rebuild — it cannot be overridden by a runtime `-e STRAPI_URL=...`.
 
 
 # Original Ask to create from ASP site → Next.js migration bundle
