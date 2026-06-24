@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { login } from "@/lib/auth";
 import { setAuthCookie } from "@/lib/authCookies";
+import { resolveUser } from "@/lib/auth/session";
 
 export const runtime = "nodejs";
 
@@ -24,7 +25,10 @@ export async function POST(request) {
   try {
     const { token, user } = await login({ identifier, password });
     await setAuthCookie(token);
-    return NextResponse.json({ user });
+    // Enrich with customer_id/primary_role so the client store has them up
+    // front; fall back to the bare login user if enrichment fails.
+    const enriched = (await resolveUser(token)) || user;
+    return NextResponse.json({ user: enriched });
   } catch (err) {
     return NextResponse.json(
       { error: err.message || "Invalid email or password." },
