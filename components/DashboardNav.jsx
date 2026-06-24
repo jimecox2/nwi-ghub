@@ -60,10 +60,16 @@ export default function DashboardNav() {
     setIsUserMenuOpen(false);
   };
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     closeDropdowns();
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // Ignore network errors; clear client state regardless.
+    }
     logout();
     router.push("/");
+    router.refresh();
   };
 
   // Generate breadcrumbs from pathname

@@ -37,24 +37,27 @@ Builds/dev need `STRAPI_URL` in the environment (`.env.local`, copied from
 
 **Auth model (read this before touching auth):** plain `fetch` + JWT against
 Strapi's Users & Permissions plugin — no Auth.js/NextAuth, no auth libraries.
+The JWT lives in an **httpOnly cookie** (`nwi_jwt`), set and cleared server-side.
 
-- The JWT is held in **React memory only** (Zustand, `store/authStore.js`):
-  `{ token, user, isAuthenticated, setAuth, logout }`. **No cookies, no
-  localStorage.** Consequences that are intentional, not bugs:
-  - A full page refresh logs the user out.
-  - `proxy.js` (the route gate) cannot see the token, so it does a best-effort
-    header check and falls through to the client-side guard.
-- **All Strapi calls live in `lib/auth.js`** (`login`, `register`,
-  `changePassword`, `getCurrentUser`, `verifyToken`) and send
-  `Authorization: Bearer <token>`. `lib/serverAuth.js` is **server-only**
-  (uses `node:crypto` + `STRAPI_JWT_SECRET`) and powers `app/api/auth/verify`.
-  Never import `lib/serverAuth.js` from a client component.
-- **Route protection is client-side.** Wrap protected pages in
-  `components/AuthGuard.jsx`, which uses `hooks/useAuth.js` to redirect to
-  `/login` when there is no token. `proxy.js` is best-effort only.
-- **Because the token is client-side, authenticated data fetching must also be
-  client-side** with the Bearer header from the store. Server components /
-  server actions cannot read the in-memory token.
+- **The raw token never reaches the browser.** Login/register/change-password/
+  logout go through `app/api/auth/*` route handlers that call Strapi
+  (`lib/auth.js`) and set/clear the cookie via `lib/authCookies.js` (server-only,
+  uses async `cookies()`). The shared cookie name lives in `lib/authConstants.js`.
+- **Zustand (`store/authStore.js`) holds only the non-sensitive `user`** plus
+  `isAuthenticated` and a `hydrated` flag: `{ user, isAuthenticated, hydrated,
+  setUser, setHydrated, logout }`. `components/AuthProvider.jsx` (mounted at the
+  root) hydrates it on load by calling `/api/auth/me`. **A page refresh keeps
+  the session** (the cookie persists) — this supersedes the old in-memory model.
+- **Route protection is real and server-side.** `proxy.js` redirects to `/login`
+  when the cookie is absent on `/dashboard/*`. `components/AuthGuard.jsx`
+  (via `hooks/useAuth.js`) is the client-side complement: it waits for hydration,
+  then redirects if not authenticated.
+- **Authenticated data fetching is server-side.** Server components and route
+  handlers read the token from the cookie (`getAuthToken()` in
+  `lib/authCookies.js`). Privileged Strapi writes go through `app/api/dashboard/*`
+  routes (server-only admin token), not the browser. `lib/serverAuth.js`
+  (`node:crypto` + `STRAPI_JWT_SECRET`) powers `app/api/auth/verify`; never import
+  it from a client component.
 
 **Routes:** public = `/` + all marketing MDX pages, `/login`, `/register`.
 Protected (AuthGuard) = `/dashboard`, `/dashboard/change-password`.

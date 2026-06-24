@@ -3,12 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { register } from "@/lib/auth";
 import { useAuthStore } from "@/store/authStore";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const setAuth = useAuthStore((s) => s.setAuth);
+  const setUser = useAuthStore((s) => s.setUser);
 
   // Minimal data collection: username, email, password.
   const [username, setUsername] = useState("");
@@ -31,12 +30,20 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      const { token, user } = await register({ username, email, password });
+      // Server route registers against Strapi; if confirmation is OFF it returns
+      // pending: false and has set the httpOnly cookie, so we sign in now.
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Registration failed.");
 
-      if (token) {
-        // Email confirmation is OFF in Strapi: we get a JWT, so sign in now.
-        setAuth({ token, user });
+      if (!data.pending) {
+        setUser(data.user);
         router.push("/dashboard");
+        router.refresh();
         return;
       }
 

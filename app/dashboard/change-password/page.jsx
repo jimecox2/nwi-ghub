@@ -2,14 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { changePassword } from "@/lib/auth";
 import { useAuthStore } from "@/store/authStore";
 
 // AuthGuard is applied by app/dashboard/layout.jsx for the whole subtree.
 export default function ChangePasswordPage() {
-  const token = useAuthStore((s) => s.token);
-  const setAuth = useAuthStore((s) => s.setAuth);
-  const user = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");
@@ -30,14 +27,17 @@ export default function ChangePasswordPage() {
 
     setLoading(true);
     try {
-      // Strapi returns a fresh JWT; keep the in-memory session current.
-      const { token: newToken, user: newUser } = await changePassword({
-        token,
-        currentPassword,
-        password,
-        passwordConfirmation,
+      // Server route uses the cookie token, changes the password in Strapi, and
+      // refreshes the cookie with the new JWT Strapi returns.
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, password, passwordConfirmation }),
       });
-      setAuth({ token: newToken, user: newUser || user });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not change password.");
+
+      if (data.user) setUser(data.user);
       setSuccess("Your password has been changed.");
       setCurrentPassword("");
       setPassword("");

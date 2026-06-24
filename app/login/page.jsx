@@ -3,12 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { login } from "@/lib/auth";
 import { useAuthStore } from "@/store/authStore";
 
 export default function LoginPage() {
   const router = useRouter();
-  const setAuth = useAuthStore((s) => s.setAuth);
+  const setUser = useAuthStore((s) => s.setUser);
 
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -20,9 +19,24 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      const { token, user } = await login({ identifier, password });
-      setAuth({ token, user });
-      router.push("/dashboard");
+      // Server route logs in against Strapi and sets the httpOnly cookie; it
+      // returns only the user. The raw token never reaches the browser.
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Login failed.");
+
+      setUser(data.user);
+
+      // Honor a ?redirect= from the proxy, defaulting to the dashboard.
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get("redirect");
+      const dest = redirect && redirect.startsWith("/") ? redirect : "/dashboard";
+      router.push(dest);
+      router.refresh();
     } catch (err) {
       setError(err.message || "Login failed.");
     } finally {

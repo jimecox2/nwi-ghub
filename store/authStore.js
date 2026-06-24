@@ -1,15 +1,20 @@
 import { create } from "zustand";
 
-// Auth state lives in React memory only — no cookies, no localStorage.
-// A full page refresh clears this store (and logs the user out) by design.
+// The JWT now lives in an httpOnly cookie (set/cleared by the /api/auth/*
+// route handlers and read server-side). The browser never holds the raw token.
+// This store keeps only the non-sensitive `user` for UI, plus a `hydrated` flag
+// so guards can tell "not logged in" apart from "haven't checked yet".
+//
+// `user` is populated on app load by AuthProvider (which calls /api/auth/me)
+// and after login/register/change-password.
 export const useAuthStore = create((set) => ({
-  token: null,
   user: null,
   isAuthenticated: false,
+  hydrated: false,
 
-  // Called after a successful login/register/change-password.
-  setAuth: ({ token, user }) =>
-    set({ token, user, isAuthenticated: Boolean(token) }),
+  setUser: (user) => set({ user: user || null, isAuthenticated: Boolean(user) }),
+  setHydrated: (hydrated = true) => set({ hydrated }),
 
-  logout: () => set({ token: null, user: null, isAuthenticated: false }),
+  // Clears client state only — call POST /api/auth/logout to drop the cookie.
+  logout: () => set({ user: null, isAuthenticated: false }),
 }));
