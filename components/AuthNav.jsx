@@ -13,10 +13,16 @@ export default function AuthNav({ onNavigate }) {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
 
-  function handleLogout() {
+  async function handleLogout() {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // Ignore network errors; clear client state regardless.
+    }
     logout();
     if (onNavigate) onNavigate();
     router.push("/");
+    router.refresh();
   }
 
   if (isAuthenticated && user) {

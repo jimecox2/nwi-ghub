@@ -4,20 +4,21 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 
-// Client-side auth guard hook. Use it inside protected page components as the
-// real enforcement layer (middleware cannot see the in-memory token).
-// When `required` and there is no token, it redirects to `redirectTo`.
+// Client-side auth guard hook. The real token lives in an httpOnly cookie and
+// is verified server-side (proxy + /api/auth/me); this hook gates the UI on the
+// hydrated store. It waits for hydration before redirecting so an authenticated
+// user isn't bounced to /login on the first render.
 export function useAuth({ redirectTo = "/login", required = true } = {}) {
   const router = useRouter();
-  const token = useAuthStore((s) => s.token);
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const hydrated = useAuthStore((s) => s.hydrated);
 
   useEffect(() => {
-    if (required && !token) {
+    if (required && hydrated && !isAuthenticated) {
       router.replace(redirectTo);
     }
-  }, [required, token, redirectTo, router]);
+  }, [required, hydrated, isAuthenticated, redirectTo, router]);
 
-  return { token, user, isAuthenticated };
+  return { user, isAuthenticated, hydrated };
 }
