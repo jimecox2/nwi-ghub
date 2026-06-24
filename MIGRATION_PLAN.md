@@ -19,10 +19,11 @@ Claude Code session can read this + `CLAUDE.md` and continue.
    browser bundle. Replaced by `app/api/dashboard/*` route handlers that hold a
    **server-only `STRAPI_ADMIN_TOKEN`** env var (Docker runtime `-e`, never
    bundled), re-check RBAC, then write to Strapi. Reads use the user's own token.
-3. **UI primitives → shadcn/ui.** Install shadcn/ui (Radix + `class-variance-
-   authority` + `tailwind-merge`/`clsx`) so the legacy `@/components/ui/*`
-   imports port near 1:1. Tailwind here is v3.4 (shadcn-compatible). The legacy
-   `cn` helper (`lib/utils/twmerge.js`) comes along.
+3. **UI primitives → lightweight local Tailwind.** Hand-roll a small
+   `components/ui/*` set (button, card, table, input, select, dialog, label) in
+   plain Tailwind, matching the existing lucide + navy-palette style. No Radix/
+   shadcn install. Bring over the legacy `cn` helper (`lib/utils/twmerge.js`)
+   only if a component needs class merging.
 
 ## Legacy CRUD review — what to reuse vs. drop
 
@@ -46,8 +47,9 @@ core and is already auth-agnostic (every function takes a `jwt` param).
 - **`Customer_id` / `primary_role` not in the login payload.** Legacy re-fetches
   via `getUserByEmail`. We resolve these once after login and cache them.
 - **shadcn/ui** (`@/components/ui/{card,table,button,input,select,dialog,label}`)
-  and **`moment`** are imported but not installed → install shadcn/ui and add
-  those components; replace `moment` with native `Intl`/`toLocaleString`.
+  and **`moment`** are imported but not installed → build lightweight local
+  Tailwind primitives instead; replace `moment` with native `Intl`/
+  `toLocaleString`.
 - **`ConsolidatedReportComponent`** (the create-flow preview table) was never
   staged → rebuild a lean version.
 - **`recharts`** needed later for the chart reports (Stage 3b).
@@ -89,9 +91,9 @@ core and is already auth-agnostic (every function takes a `jwt` param).
 - Each: read cookie → verify → **RBAC authorize** → reads use the user's token;
   privileged writes use server-only `STRAPI_ADMIN_TOKEN`.
 
-**0e. Install shadcn/ui** — init shadcn/ui, add `button card table input select
-dialog label`, bring over the `cn` helper. Verify it composes with the existing
-Tailwind v3.4 config and navy palette.
+**0e. Lightweight UI primitives** — hand-roll `components/ui/{button,card,table,
+input,select,dialog,label}.jsx` in plain Tailwind (navy palette, lucide icons).
+No shadcn/Radix install.
 
 ---
 
