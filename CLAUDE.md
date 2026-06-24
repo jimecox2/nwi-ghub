@@ -69,6 +69,9 @@ Protected (AuthGuard) = `/dashboard`, `/dashboard/change-password`.
   so it is **inlined at build time**. In Docker it is a **build arg**.
 - `STRAPI_JWT_SECRET` — **server-only**, read at runtime. Never mapped into the
   client bundle; in Docker it is a **runtime** `-e` var, never baked.
+- `FULL_ACCESS_ADMIN_TOKEN` — **server-only** Strapi API token. Used by the
+  dashboard API proxy (`app/api/dashboard/*`) for privileged writes after
+  server-side RBAC. Never exposed to the browser; Docker **runtime** `-e` var.
 
 ## Strapi dependency
 

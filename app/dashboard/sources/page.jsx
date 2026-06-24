@@ -1,9 +1,19 @@
-// Placeholder page. Auth + nav come from app/dashboard/layout.jsx.
-export default function Page() {
+"use client";
+
+// Manage Sources. The selector owns the source list (fetch/switch/share/delete
+// via the API proxy) and reports the active source up; the content component
+// renders that source's data. AuthGuard is applied by the dashboard layout.
+import { useState } from "react";
+import DashboardSourceSelector from "@/components/dashboard/DashboardSourceSelector";
+import EnterpriseDashboardContent from "@/components/dashboard/EnterpriseDashboardContent";
+
+export default function SourcesPage() {
+  const [activeSource, setActiveSource] = useState(null);
+
   return (
-    <div className="container mx-auto px-4 py-10">
-      <h1 className="text-2xl font-bold text-gray-900">Manage Sources</h1>
-      <p className="mt-2 text-gray-500">This page is coming soon.</p>
+    <div className="container mx-auto space-y-6 p-6">
+      <DashboardSourceSelector onActiveChange={setActiveSource} />
+      <EnterpriseDashboardContent source={activeSource} />
     </div>
   );
 }

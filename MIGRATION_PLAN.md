@@ -58,7 +58,10 @@ core and is already auth-agnostic (every function takes a `jwt` param).
 
 ---
 
-## Stage 0 — Foundations (deploy up front)
+## Stage 0 — Foundations (deploy up front) — ✅ DONE
+
+The server-only admin token env var is named **`FULL_ACCESS_ADMIN_TOKEN`**.
+
 
 **0a. httpOnly cookie auth.**
 - `app/api/auth/login` + `logout` route handlers: call Strapi, set/clear the
@@ -97,7 +100,7 @@ No shadcn/Radix install.
 
 ---
 
-## Stage 1 — Settings nav (data-source plumbing)
+## Stage 1 — Settings nav (data-source plumbing) — ✅ BUILT (pending live verify)
 
 1. **`/dashboard/pubsets`** (Make Sources): server component → fetch all
    `timebars` → server-side RBAC filter → ported `PubsetsDataTable`
