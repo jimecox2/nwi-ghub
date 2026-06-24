@@ -1,23 +1,15 @@
 import { NextResponse } from "next/server";
-import { getAuthToken } from "@/lib/authCookies";
-import { getCurrentUser } from "@/lib/auth";
+import { getSessionUser } from "@/lib/auth/session";
 
 export const runtime = "nodejs";
 
-// GET /api/auth/me — resolves the current user from the cookie token by calling
-// Strapi /users/me. Returns 401 when there is no valid session. The returned
-// user carries whatever custom fields Strapi exposes (e.g. customer_id,
-// primary_role), which RBAC (Stage 0b) consumes.
+// GET /api/auth/me — resolves the current user from the cookie token, enriched
+// with customer_id/primary_role (which /users/me omits). Returns 401 when there
+// is no valid session. RBAC (lib/auth/rbac.js) consumes the returned fields.
 export async function GET() {
-  const token = await getAuthToken();
-  if (!token) {
-    return NextResponse.json({ user: null }, { status: 401 });
-  }
-
-  const user = await getCurrentUser(token);
+  const user = await getSessionUser();
   if (!user) {
     return NextResponse.json({ user: null }, { status: 401 });
   }
-
   return NextResponse.json({ user });
 }
