@@ -1,9 +1,19 @@
-// Placeholder page. Auth + nav come from app/dashboard/layout.jsx.
-export default function Page() {
+"use client";
+
+// Portfolio Report — portfolio-level + project rows from the active source.
+import { PieChart } from "lucide-react";
+import ReportShell from "@/components/dashboard/ReportShell";
+import ReportDataTable from "@/components/dashboard/ReportDataTable";
+
+export default function PortfolioReportPage() {
   return (
-    <div className="container mx-auto px-4 py-10">
-      <h1 className="text-2xl font-bold text-gray-900">Portfolio Status</h1>
-      <p className="mt-2 text-gray-500">This page is coming soon.</p>
-    </div>
+    <ReportShell title="Portfolio Report" icon={PieChart}>
+      {({ dashboardSource }) => {
+        const rows = (dashboardSource.tbmdjoined || []).filter(
+          (r) => r.tbType === "Portfolio" || r.tbType === "Project"
+        );
+        return <ReportDataTable data={rows} reportType="default" filename="portfolio.csv" />;
+      }}
+    </ReportShell>
   );
 }
