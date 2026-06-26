@@ -1,7 +1,7 @@
 // app/dashboard/reports/financial-summary/page.jsx
 'use client'
 
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
 import { DollarSign, ArrowUpDown, ChevronDown, ChevronUp, Info } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -384,8 +384,8 @@ const FinancialSummaryPage = () => {
               </thead>
               <tbody>
                 {sorted.map((p, idx) => (
-                  <>
-                    <tr key={p.tbID || idx} className="border-b border-gray-100 hover:bg-gray-50">
+                  <Fragment key={p.tbID || idx}>
+                    <tr className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="px-3 py-2">
                         <div className="font-medium text-gray-900">{p.tbName}</div>
                         <div className="text-xs text-gray-500">{p.tbID}</div>
@@ -438,7 +438,7 @@ const FinancialSummaryPage = () => {
                       </td>
                     </tr>
                     {expandedRow === idx && (
-                      <tr key={`${p.tbID}-detail`} className="bg-blue-50 border-b border-blue-100">
+                      <tr className="bg-blue-50 border-b border-blue-100">
                         <td colSpan={10} className="px-6 py-3">
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
                             <div>
@@ -487,7 +487,7 @@ const FinancialSummaryPage = () => {
                         </td>
                       </tr>
                     )}
-                  </>
+                  </Fragment>
                 ))}
               </tbody>
             </table>

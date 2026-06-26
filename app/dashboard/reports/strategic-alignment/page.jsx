@@ -1,7 +1,7 @@
 // app/dashboard/reports/strategic-alignment/page.jsx
 'use client'
 
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
 import { Grid3X3, ChevronDown, ChevronUp, Info } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -261,8 +261,8 @@ const StrategicAlignmentPage = () => {
                 {objectives.map(obj => {
                   const objTotal = objectiveTotals.find(t => t.name === obj)
                   return (
-                    <>
-                      <tr key={obj}>
+                    <Fragment key={obj}>
+                      <tr>
                         <td className="px-3 py-2 font-medium text-gray-800 bg-gray-50 border-r border-gray-200">
                           {obj}
                         </td>
@@ -333,7 +333,7 @@ const StrategicAlignmentPage = () => {
                           </tr>
                         )
                       })}
-                    </>
+                    </Fragment>
                   )
                 })}
                 {/* Column totals */}
