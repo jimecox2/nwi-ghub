@@ -59,8 +59,34 @@ The JWT lives in an **httpOnly cookie** (`nwi_jwt`), set and cleared server-side
   (`node:crypto` + `STRAPI_JWT_SECRET`) powers `app/api/auth/verify`; never import
   it from a client component.
 
+**Dashboard (the member area, `/dashboard/*`):** an Enterprise PPM dashboard
+built on Strapi `dashboard-sources` (consolidated views of `timebars` pubsets).
+
+- **Standalone shell.** `components/SiteChrome.jsx` hides the marketing `TopNav`
+  under `/dashboard`; `app/dashboard/layout.jsx` wraps the subtree in `AuthGuard`
+  and renders `components/DashboardNav.jsx`.
+- **Data layer (`lib/dashboard/`):** `config.js` (`API_URL`), `strapi.js` (plain
+  `fetch` wrappers), `sources.js` (dashboard-source CRUD + preprocess),
+  `pubsets.js`, `adapter.js` (`adaptDashboardSourceData` → the shape every report
+  consumes), `rollup.js` (consolidation engine).
+- **API proxy (`app/api/dashboard/*`):** reads use the user's cookie token;
+  privileged writes use `FULL_ACCESS_ADMIN_TOKEN`. Every route enforces RBAC via
+  `lib/auth/rbac.js` (pure, plain-`user` object) using `lib/auth/session.js`
+  (`getSessionContext`, which enriches the user with `customer_id`/`primary_role`).
+- **Reports** all use `hooks/useEnterpriseDashboardSource.js` →
+  `components/dashboard/ReportShell.jsx` → a display component (`ReportDataTable`
+  for tables, `components/dashboard/charts/*` for recharts visuals).
+- **Flow:** `/dashboard/pubsets` (select pubsets) → `consolidated` (save a
+  source) → `/dashboard/sources` (activate/share) → `settings/preprocess` →
+  reports read the active source.
+
 **Routes:** public = `/` + all marketing MDX pages, `/login`, `/register`.
-Protected (AuthGuard) = `/dashboard`, `/dashboard/change-password`.
+Protected (cookie + AuthGuard) = `/dashboard` and everything under it
+(`pubsets`, `pubsets/consolidated`, `pubsets/report/[id]`, `sources`,
+`settings/preprocess`, `reports/*`, `visualizations/*`, `analytics/*`,
+`drilldown/cards`, `facilities`, `change-password`). `analytics/performance` and
+`analytics/cost` are new pages (not in the legacy); `drilldown/cards` and
+`facilities` remain scaffold placeholders.
 
 ## Environment variables
 
@@ -91,7 +117,10 @@ Build bakes `STRAPI_URL`; runtime supplies `STRAPI_JWT_SECRET`:
 
 ```bash
 docker build --build-arg STRAPI_URL=https://be2.timebars.com -t jimecox807/nwi:latest .
-docker run -p 3012:3012 -e STRAPI_JWT_SECRET=... jimecox807/nwi:latest
+docker run -p 3012:3012 \
+  -e STRAPI_JWT_SECRET=... \
+  -e FULL_ACCESS_ADMIN_TOKEN=... \
+  jimecox807/nwi:latest
 ```
 
 `deploy-push-to-hub-secure.sh` wraps build+push and passes the build arg.
