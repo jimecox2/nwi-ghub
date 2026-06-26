@@ -33,6 +33,7 @@ import {
   Grid3X3,
   SlidersHorizontal,
   CalendarRange,
+  Network,
 } from "lucide-react";
 
 /**
@@ -93,15 +94,27 @@ export default function DashboardNav() {
 
   // Display labels for menu categories (handles PPM capitalization)
   const menuLabels = {
+    ppm: "PPM",
     project: "Project",
-    facilities: "Facilities",
+    task: "Task",
     resource: "Resource",
     agile: "Agile",
-    ppm: "PPM",
+    other: "Other",
     settings: "Settings",
   };
 
+  // Rendered left-to-right in object-key order: PPM, Project, Task, Resource,
+  // Agile, Other, Settings.
   const menuItems = {
+    ppm: [
+      { label: "Prioritization Matrix", href: "/dashboard/reports/prioritization", icon: Target },
+      { label: "Bubble Chart", href: "/dashboard/reports/bubble-chart", icon: CircleDot },
+      { label: "Balanced Scorecard", href: "/dashboard/reports/balanced-scorecard", icon: Scale },
+      { label: "Financial Summary", href: "/dashboard/reports/financial-summary", icon: DollarSign },
+      { label: "Strategic Alignment", href: "/dashboard/reports/strategic-alignment", icon: Grid3X3 },
+      { label: "What-If Scenarios", href: "/dashboard/reports/what-if", icon: SlidersHorizontal },
+      { label: "Cost Analytics", href: "/dashboard/analytics/cost", icon: LineChart },
+    ],
     project: [
       { label: "All Reports", href: "/dashboard/reports", icon: BarChart3 },
       { label: "Project Status", href: "/dashboard/reports/projects", icon: FileText },
@@ -113,7 +126,7 @@ export default function DashboardNav() {
       { label: "Executive Summary", href: "/dashboard/reports/executive-summary", icon: Briefcase },
       { label: "Project Cards", href: "/dashboard/drilldown/cards", icon: Layers },
     ],
-    facilities: [
+    task: [
       { label: "Facility Schedule", href: "/dashboard/facilities", icon: CalendarRange },
     ],
     resource: [
@@ -126,14 +139,8 @@ export default function DashboardNav() {
       { label: "Burndown Charts", href: "/dashboard/visualizations/burndown", icon: Activity },
       { label: "Performance Analytics", href: "/dashboard/analytics/performance", icon: TrendingUp },
     ],
-    ppm: [
-      { label: "Prioritization Matrix", href: "/dashboard/reports/prioritization", icon: Target },
-      { label: "Bubble Chart", href: "/dashboard/reports/bubble-chart", icon: CircleDot },
-      { label: "Balanced Scorecard", href: "/dashboard/reports/balanced-scorecard", icon: Scale },
-      { label: "Financial Summary", href: "/dashboard/reports/financial-summary", icon: DollarSign },
-      { label: "Strategic Alignment", href: "/dashboard/reports/strategic-alignment", icon: Grid3X3 },
-      { label: "What-If Scenarios", href: "/dashboard/reports/what-if", icon: SlidersHorizontal },
-      { label: "Cost Analytics", href: "/dashboard/analytics/cost", icon: LineChart },
+    other: [
+      { label: "WBS View", href: "/dashboard/other/wbs-view", icon: Network },
     ],
     settings: [
       { label: "Make Sources", href: "/dashboard/pubsets", icon: FolderOpen },
