@@ -73,8 +73,16 @@ component (`ReportShell` + `ReportDataTable` / chart components).
 - **3b - DONE (recharts):** cost-charts, usage-charts, burndown, capacity-demand,
   resource-pool. (`analytics/performance` + `analytics/cost` were never in the
   legacy staging - left as scaffold pages.)
-- **3c - TODO:** PPM reports - prioritization, bubble, scorecard,
-  financial-summary, strategic-alignment, what-if.
+- **3c - DONE:** PPM reports - prioritization, bubble, scorecard,
+  financial-summary, strategic-alignment, what-if. Ported near-verbatim (they
+  render recharts inline and use the UI primitives); only the hook + page-states
+  import paths were rewritten.
+
+### Remaining
+- `analytics/performance` + `analytics/cost` (in the nav, never built in the
+  legacy) - new work if wanted; currently scaffold pages.
+- Cleanup: remove `migration-staging/`, update `CLAUDE.md` with the dashboard
+  routes/structure.
 
 ---
 
