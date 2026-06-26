@@ -78,11 +78,19 @@ component (`ReportShell` + `ReportDataTable` / chart components).
   render recharts inline and use the UI primitives); only the hook + page-states
   import paths were rewritten.
 
-### Remaining
-- `analytics/performance` + `analytics/cost` (in the nav, never built in the
-  legacy) - new work if wanted; currently scaffold pages.
-- Cleanup: remove `migration-staging/`, update `CLAUDE.md` with the dashboard
-  routes/structure.
+### Done (post-3c)
+- `analytics/performance` + `analytics/cost` - built fresh (not ports):
+  schedule/cost variance + work and cost/budget analytics from `tbmdjoined`
+  (+ weekly cost trend from `resCalcs`).
+- Cleanup: `migration-staging/` removed; `CLAUDE.md` updated with the dashboard
+  architecture + routes.
+
+### Still scaffold placeholders (never built in the legacy either)
+- `/dashboard/drilldown/cards`, `/dashboard/facilities`.
+
+### Pending live verification
+- 3b/3c/analytics depend on Costbars/resource fields; confirm against a real
+  source. Burndown sprint charts (Agilebars `tbcharts`) are defensively parsed.
 
 ---
 
