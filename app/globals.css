@@ -1,3 +1,42 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Navy horizontal scrollbars for the configurable report table (top + bottom).
+   .sir-scroll is applied to both the synced top bar and the table container. */
+.sir-scroll {
+  scrollbar-width: thin;                 /* Firefox */
+  scrollbar-color: #062f57 #dbeafe;      /* thumb / track */
+}
+.sir-scroll::-webkit-scrollbar {
+  height: 12px;
+}
+.sir-scroll::-webkit-scrollbar-track {
+  background: #dbeafe;
+  border-radius: 6px;
+}
+.sir-scroll::-webkit-scrollbar-thumb {
+  background: #062f57;
+  border-radius: 6px;
+}
+.sir-scroll::-webkit-scrollbar-thumb:hover {
+  background: #0b4d8e;
+}
+
+/* Rich-text (HTML) cell content rendered inside ConfigurableTable. */
+.sir-html {
+  overflow-wrap: anywhere;
+}
+.sir-html p {
+  margin: 0 0 0.5em;
+}
+.sir-html ul,
+.sir-html ol {
+  margin: 0 0 0.5em;
+  padding-left: 1.25em;
+  list-style: revert;
+}
+.sir-html a {
+  color: #0b4d8e;
+  text-decoration: underline;
+}
