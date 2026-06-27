@@ -183,7 +183,7 @@ export default function ConfigurableTable({ data = [], columnConfig = {}, filena
               </tr>
             ) : (
               shown.map((row, i) => (
-                <tr key={row.tbID ?? row.id ?? i} className="border-b border-blue-100 hover:bg-gray-50">
+                <tr key={row.tbID ?? row.id ?? i} className="border-b border-blue-300 hover:bg-gray-50">
                   {columns.map((c) => (
                     <td key={c.key} className="whitespace-normal break-words px-3 py-2 align-top text-gray-700">
                       {renderCell(row[c.key], c.key)}
