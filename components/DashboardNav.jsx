@@ -34,6 +34,7 @@ import {
   SlidersHorizontal,
   CalendarRange,
   Network,
+  Tag,
 } from "lucide-react";
 
 /**
@@ -127,6 +128,7 @@ export default function DashboardNav() {
       { label: "Project Cards", href: "/dashboard/drilldown/cards", icon: Layers },
     ],
     task: [
+      { label: "Tasks Tagged with Show In", href: "/dashboard/reports/show-in", icon: Tag },
       { label: "Facility Schedule", href: "/dashboard/facilities", icon: CalendarRange },
     ],
     resource: [
