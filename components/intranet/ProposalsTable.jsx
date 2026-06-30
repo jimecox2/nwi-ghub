@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
+import ManageAccessModal from "@/components/intranet/ManageAccessModal";
 
 // Proposals come from the active "Costbars" pubset for the viewer's customer,
 // fetched through the RBAC-gated proxy at /api/dashboard/pubsets/active. The
@@ -47,6 +48,10 @@ export default function ProposalsTable() {
   const [proposals, setProposals] = useState([]);
   const [state, setState] = useState("loading"); // loading | ready | unauthenticated | forbidden | empty | error
   const [message, setMessage] = useState("");
+  const [pubsetId, setPubsetId] = useState(null);
+  const [canManage, setCanManage] = useState(false);
+  const [showManage, setShowManage] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -76,6 +81,8 @@ export default function ProposalsTable() {
 
         const rows = data.proposals || [];
         setProposals(rows);
+        setPubsetId(data.pubset?.id ?? null);
+        setCanManage(Boolean(data.canManageAccess));
         setState(rows.length ? "ready" : "empty");
       } catch (err) {
         if (active) {
@@ -88,7 +95,38 @@ export default function ProposalsTable() {
     return () => {
       active = false;
     };
-  }, [hydrated, user]);
+  }, [hydrated, user, reloadKey]);
+
+  // The "Manage Access" button is available to admins even when the proposal
+  // list is empty, so it renders above the per-state body below.
+  const manageButton =
+    canManage && pubsetId ? (
+      <button
+        type="button"
+        onClick={() => setShowManage(true)}
+        className="rounded-md border border-[#0b4d8e] px-3 py-1.5 text-sm font-medium text-[#0b4d8e] hover:bg-[#0b4d8e] hover:text-white"
+      >
+        Manage Access
+      </button>
+    ) : null;
+
+  const modal = showManage && pubsetId ? (
+    <ManageAccessModal
+      pubsetId={pubsetId}
+      onClose={() => setShowManage(false)}
+      onSaved={() => setReloadKey((k) => k + 1)}
+    />
+  ) : null;
+
+  function withToolbar(body) {
+    return (
+      <div>
+        {manageButton ? <div className="mb-4 flex justify-end">{manageButton}</div> : null}
+        {body}
+        {modal}
+      </div>
+    );
+  }
 
   if (state === "loading") {
     return <p className="text-sm text-gray-500">Loading proposals…</p>;
@@ -111,10 +149,12 @@ export default function ProposalsTable() {
     return <p className="text-sm text-red-600">Failed to load proposals: {message}</p>;
   }
   if (state === "empty") {
-    return <p className="text-sm text-gray-600">No proposals are currently in progress.</p>;
+    return withToolbar(
+      <p className="text-sm text-gray-600">No proposals are currently in progress.</p>
+    );
   }
 
-  return (
+  return withToolbar(
     <div className="overflow-x-auto rounded-lg border border-gray-200">
       <table className="min-w-full divide-y divide-gray-200 text-sm">
         <thead className="bg-[#062f57] text-left text-white">

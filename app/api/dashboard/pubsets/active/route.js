@@ -6,7 +6,7 @@ import {
   serverError,
 } from "@/lib/dashboard/apiHelpers";
 import { getActivePubsetForProduct } from "@/lib/dashboard/pubsets";
-import { hasAccessToPubset } from "@/lib/auth/rbac";
+import { hasAccessToPubset, canManagePubsetAccess } from "@/lib/auth/rbac";
 
 export const runtime = "nodejs";
 
@@ -57,6 +57,7 @@ export async function GET(request) {
     return NextResponse.json({
       pubset: { id: pubset.id, name: pubset.name, source_product: pubset.source_product },
       proposals: toProposals(pubset.tbmdjoined),
+      canManageAccess: canManagePubsetAccess(user, pubset),
     });
   } catch (err) {
     return serverError(err);
