@@ -1,26 +1,15 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useEnterpriseDashboardSource } from "@/hooks/useEnterpriseDashboardSource";
+import { useAuthStore } from "@/store/authStore";
 
-// Proposals = active dashboard-source rows where Status is "New" and the item
-// is in one of the early workflow stages. Field mapping (tbmdjoined row -> column):
-//   Proposal       -> tbName
-//   Client         -> tbMDCustomerID
-//   Owner          -> tbOwner
-//   Status         -> tbMDStatus
-//   Stage          -> tbMDStage
-//   Approval State -> tbMDState
-//   Est. Value     -> tbBudgetCost
-//   Last Updated   -> tbMDtbLastModified
-const PROPOSAL_STAGES = [
-  "1 Proposed",
-  "2 Triaged",
-  "3 Prioritized",
-  "4 Selected",
-  "5 Assigned",
-];
-
+// Proposals come from the active "Costbars" pubset for the viewer's customer,
+// fetched through the RBAC-gated proxy at /api/dashboard/pubsets/active. The
+// route returns rows already filtered to Status = "New" and mapped to columns:
+//   proposal (tbName), client (tbMDCustomerID), owner (tbOwner),
+//   status (tbMDStatus), stage (tbMDStage), approvalState (tbMDState),
+//   estValue (tbBudgetCost), lastUpdated (tbMDtbLastModified).
 const stageStyles = {
   "1 Proposed": "bg-gray-100 text-gray-700",
   "2 Triaged": "bg-amber-100 text-amber-800",
@@ -52,17 +41,59 @@ function formatDate(value) {
 }
 
 export default function ProposalsTable() {
-  const { dashboardSource, status, isLoading, error } =
-    useEnterpriseDashboardSource({ autoPreprocess: false });
+  const hydrated = useAuthStore((s) => s.hydrated);
+  const user = useAuthStore((s) => s.user);
 
-  const rows = (dashboardSource?.tbmdjoined || []).filter(
-    (r) => r.tbMDStatus === "New" && PROPOSAL_STAGES.includes(r.tbMDStage)
-  );
+  const [proposals, setProposals] = useState([]);
+  const [state, setState] = useState("loading"); // loading | ready | unauthenticated | forbidden | empty | error
+  const [message, setMessage] = useState("");
 
-  if (isLoading) {
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!user) {
+      setState("unauthenticated");
+      return;
+    }
+
+    let active = true;
+    (async () => {
+      setState("loading");
+      try {
+        const res = await fetch("/api/dashboard/pubsets/active?product=Costbars");
+        const data = await res.json().catch(() => ({}));
+        if (!active) return;
+
+        if (res.status === 403 || res.status === 404) {
+          setMessage(data.error || "No proposals available for your account.");
+          setState("forbidden");
+          return;
+        }
+        if (!res.ok) {
+          setMessage(data.error || "Failed to load proposals.");
+          setState("error");
+          return;
+        }
+
+        const rows = data.proposals || [];
+        setProposals(rows);
+        setState(rows.length ? "ready" : "empty");
+      } catch (err) {
+        if (active) {
+          setMessage(err.message);
+          setState("error");
+        }
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [hydrated, user]);
+
+  if (state === "loading") {
     return <p className="text-sm text-gray-500">Loading proposals…</p>;
   }
-  if (status === "unauthenticated") {
+  if (state === "unauthenticated") {
     return (
       <p className="text-sm text-gray-600">
         Please{" "}
@@ -73,18 +104,13 @@ export default function ProposalsTable() {
       </p>
     );
   }
-  if (error) {
-    return <p className="text-sm text-red-600">Failed to load proposals: {error}</p>;
+  if (state === "forbidden") {
+    return <p className="text-sm text-gray-600">{message}</p>;
   }
-  if (!dashboardSource) {
-    return (
-      <p className="text-sm text-gray-600">
-        No active dashboard source found. Activate a source in the dashboard to
-        populate this list.
-      </p>
-    );
+  if (state === "error") {
+    return <p className="text-sm text-red-600">Failed to load proposals: {message}</p>;
   }
-  if (rows.length === 0) {
+  if (state === "empty") {
     return <p className="text-sm text-gray-600">No proposals are currently in progress.</p>;
   }
 
@@ -104,26 +130,26 @@ export default function ProposalsTable() {
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100 bg-white">
-          {rows.map((r) => (
-            <tr key={r.tbID ?? `${r.tbName}-${r.tbMDCustomerID}`} className="hover:bg-gray-50">
-              <td className="px-4 py-3 font-medium text-gray-900">{r.tbName || "—"}</td>
-              <td className="px-4 py-3 text-gray-700">{r.tbMDCustomerID || "—"}</td>
-              <td className="px-4 py-3 text-gray-700">{r.tbOwner || "—"}</td>
-              <td className="px-4 py-3 text-gray-700">{r.tbMDStatus || "—"}</td>
+          {proposals.map((p) => (
+            <tr key={p.id} className="hover:bg-gray-50">
+              <td className="px-4 py-3 font-medium text-gray-900">{p.proposal || "—"}</td>
+              <td className="px-4 py-3 text-gray-700">{p.client || "—"}</td>
+              <td className="px-4 py-3 text-gray-700">{p.owner || "—"}</td>
+              <td className="px-4 py-3 text-gray-700">{p.status || "—"}</td>
               <td className="px-4 py-3">
                 <span
                   className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                    stageStyles[r.tbMDStage] ?? "bg-gray-100 text-gray-700"
+                    stageStyles[p.stage] ?? "bg-gray-100 text-gray-700"
                   }`}
                 >
-                  {r.tbMDStage || "—"}
+                  {p.stage || "—"}
                 </span>
               </td>
-              <td className="px-4 py-3 text-gray-700">{r.tbMDState || "—"}</td>
+              <td className="px-4 py-3 text-gray-700">{p.approvalState || "—"}</td>
               <td className="px-4 py-3 text-right tabular-nums text-gray-700">
-                {formatCurrency(r.tbBudgetCost)}
+                {formatCurrency(p.estValue)}
               </td>
-              <td className="px-4 py-3 text-gray-500">{formatDate(r.tbMDtbLastModified)}</td>
+              <td className="px-4 py-3 text-gray-500">{formatDate(p.lastUpdated)}</td>
             </tr>
           ))}
         </tbody>

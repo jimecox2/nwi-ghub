@@ -20,9 +20,8 @@ export default function ProposalsPage() {
       <header className="mt-2">
         <h1 className="text-3xl font-semibold text-[#062f57]">Proposals in Progress</h1>
         <p className="mt-2 max-w-2xl text-gray-600">
-          Active proposals the team is currently working on — new items in the
-          Proposed, Triaged, Prioritized, Selected and Assigned stages, pulled
-          live from the active dashboard source.
+          New proposals the team is currently working on, pulled live from your
+          customer&rsquo;s active Costbars pubset.
         </p>
       </header>
 
