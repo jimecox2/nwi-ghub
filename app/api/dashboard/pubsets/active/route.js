@@ -21,7 +21,6 @@ function toProposals(tbmdjoined) {
       tbID: r.tbID ?? "",
       projectType: r.tbMDProjectType || "",
       proposal: r.tbName || "",
-      client: r.tbMDCustomerID || "",
       owner: r.tbOwner || "",
       status: r.tbMDStatus || "",
       stage: r.tbMDStage || "",

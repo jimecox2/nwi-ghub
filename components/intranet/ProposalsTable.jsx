@@ -164,7 +164,6 @@ export default function ProposalsTable() {
             <th className="px-4 py-3 font-semibold" style={{ minWidth: 150, maxWidth: 300 }}>
               Name
             </th>
-            <th className="px-4 py-3 font-semibold">Client</th>
             <th className="px-4 py-3 font-semibold">Owner</th>
             <th className="px-4 py-3 font-semibold">Status</th>
             <th className="px-4 py-3 font-semibold">Stage</th>
@@ -184,7 +183,6 @@ export default function ProposalsTable() {
               >
                 {p.proposal || "—"}
               </td>
-              <td className="px-4 py-3 text-gray-700">{p.client || "—"}</td>
               <td className="px-4 py-3 text-gray-700">{p.owner || "—"}</td>
               <td className="px-4 py-3 text-gray-700">{p.status || "—"}</td>
               <td className="px-4 py-3">
