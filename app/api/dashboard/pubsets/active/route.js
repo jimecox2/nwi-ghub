@@ -19,6 +19,7 @@ function toProposals(tbmdjoined) {
     .map((r) => ({
       id: r.tbID ?? `${r.tbName}-${r.tbMDCustomerID}`,
       tbID: r.tbID ?? "",
+      projectType: r.tbMDProjectType || "",
       proposal: r.tbName || "",
       client: r.tbMDCustomerID || "",
       owner: r.tbOwner || "",

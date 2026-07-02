@@ -160,7 +160,10 @@ export default function ProposalsTable() {
         <thead className="bg-[#062f57] text-left text-white">
           <tr>
             <th className="px-4 py-3 font-semibold">ID</th>
-            <th className="px-4 py-3 font-semibold">Proposal</th>
+            <th className="px-4 py-3 font-semibold">Type</th>
+            <th className="px-4 py-3 font-semibold" style={{ minWidth: 150, maxWidth: 300 }}>
+              Name
+            </th>
             <th className="px-4 py-3 font-semibold">Client</th>
             <th className="px-4 py-3 font-semibold">Owner</th>
             <th className="px-4 py-3 font-semibold">Status</th>
@@ -174,7 +177,13 @@ export default function ProposalsTable() {
           {proposals.map((p) => (
             <tr key={p.id} className="hover:bg-gray-50">
               <td className="px-4 py-3 tabular-nums text-gray-500">{p.tbID || "—"}</td>
-              <td className="px-4 py-3 font-medium text-gray-900">{p.proposal || "—"}</td>
+              <td className="px-4 py-3 text-gray-700">{p.projectType || "—"}</td>
+              <td
+                className="px-4 py-3 font-medium text-gray-900"
+                style={{ minWidth: 150, maxWidth: 300 }}
+              >
+                {p.proposal || "—"}
+              </td>
               <td className="px-4 py-3 text-gray-700">{p.client || "—"}</td>
               <td className="px-4 py-3 text-gray-700">{p.owner || "—"}</td>
               <td className="px-4 py-3 text-gray-700">{p.status || "—"}</td>
