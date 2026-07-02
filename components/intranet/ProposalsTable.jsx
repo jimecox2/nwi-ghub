@@ -49,6 +49,7 @@ export default function ProposalsTable() {
   const [state, setState] = useState("loading"); // loading | ready | unauthenticated | forbidden | empty | error
   const [message, setMessage] = useState("");
   const [pubsetId, setPubsetId] = useState(null);
+  const [publishedDate, setPublishedDate] = useState(null);
   const [canManage, setCanManage] = useState(false);
   const [showManage, setShowManage] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
@@ -82,6 +83,7 @@ export default function ProposalsTable() {
         const rows = data.proposals || [];
         setProposals(rows);
         setPubsetId(data.pubset?.id ?? null);
+        setPublishedDate(data.publishedDate ?? null);
         setCanManage(Boolean(data.canManageAccess));
         setState(rows.length ? "ready" : "empty");
       } catch (err) {
@@ -104,6 +106,7 @@ export default function ProposalsTable() {
       <button
         type="button"
         onClick={() => setShowManage(true)}
+        title="Grants temporary access. These grants will be overridden by the next publish."
         className="rounded-md border border-[#0b4d8e] px-3 py-1.5 text-sm font-medium text-[#0b4d8e] hover:bg-[#0b4d8e] hover:text-white"
       >
         Manage Access
@@ -121,7 +124,12 @@ export default function ProposalsTable() {
   function withToolbar(body) {
     return (
       <div>
-        {manageButton ? <div className="mb-4 flex justify-end">{manageButton}</div> : null}
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <p className="text-sm text-gray-500">
+            Last published on: {publishedDate ? formatDate(publishedDate) : "—"}
+          </p>
+          {manageButton}
+        </div>
         {body}
         {modal}
       </div>
@@ -169,7 +177,6 @@ export default function ProposalsTable() {
             <th className="px-4 py-3 font-semibold">Stage</th>
             <th className="px-4 py-3 font-semibold">Approval State</th>
             <th className="px-4 py-3 text-right font-semibold">Est. Value</th>
-            <th className="px-4 py-3 font-semibold">Last Updated</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100 bg-white">
@@ -198,7 +205,6 @@ export default function ProposalsTable() {
               <td className="px-4 py-3 text-right tabular-nums text-gray-700">
                 {formatCurrency(p.estValue)}
               </td>
-              <td className="px-4 py-3 text-gray-500">{formatDate(p.lastUpdated)}</td>
             </tr>
           ))}
         </tbody>

@@ -26,7 +26,6 @@ function toProposals(tbmdjoined) {
       stage: r.tbMDStage || "",
       approvalState: r.tbMDState || "",
       estValue: r.tbBudgetCost ?? null,
-      lastUpdated: r.tbMDtbLastModified || null,
     }));
 }
 
@@ -56,7 +55,13 @@ export async function GET(request) {
     }
 
     return NextResponse.json({
-      pubset: { id: pubset.id, name: pubset.name, source_product: pubset.source_product },
+      pubset: {
+        id: pubset.id,
+        name: pubset.name,
+        source_product: pubset.source_product,
+        published_date: pubset.published_date,
+      },
+      publishedDate: pubset.published_date,
       proposals: toProposals(pubset.tbmdjoined),
       canManageAccess: canManagePubsetAccess(user, pubset),
     });
