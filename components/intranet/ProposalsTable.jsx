@@ -159,6 +159,7 @@ export default function ProposalsTable() {
       <table className="min-w-full divide-y divide-gray-200 text-sm">
         <thead className="bg-[#062f57] text-left text-white">
           <tr>
+            <th className="px-4 py-3 font-semibold">ID</th>
             <th className="px-4 py-3 font-semibold">Proposal</th>
             <th className="px-4 py-3 font-semibold">Client</th>
             <th className="px-4 py-3 font-semibold">Owner</th>
@@ -172,6 +173,7 @@ export default function ProposalsTable() {
         <tbody className="divide-y divide-gray-100 bg-white">
           {proposals.map((p) => (
             <tr key={p.id} className="hover:bg-gray-50">
+              <td className="px-4 py-3 tabular-nums text-gray-500">{p.tbID || "—"}</td>
               <td className="px-4 py-3 font-medium text-gray-900">{p.proposal || "—"}</td>
               <td className="px-4 py-3 text-gray-700">{p.client || "—"}</td>
               <td className="px-4 py-3 text-gray-700">{p.owner || "—"}</td>

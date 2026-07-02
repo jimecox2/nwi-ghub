@@ -10,14 +10,15 @@ import { hasAccessToPubset, canManagePubsetAccess } from "@/lib/auth/rbac";
 
 export const runtime = "nodejs";
 
-// Proposal = a tbmdjoined row whose Status is "New". Field mapping is applied
-// here so the client only receives the slim rows it renders (and the full
-// pubset payload never leaves the server).
+// Proposal = a tbmdjoined Project row whose Status is "New". Field mapping is
+// applied here so the client only receives the slim rows it renders (and the
+// full pubset payload never leaves the server).
 function toProposals(tbmdjoined) {
   return (Array.isArray(tbmdjoined) ? tbmdjoined : [])
-    .filter((r) => r.tbMDStatus === "New")
+    .filter((r) => r.tbType === "Project" && r.tbMDStatus === "New")
     .map((r) => ({
       id: r.tbID ?? `${r.tbName}-${r.tbMDCustomerID}`,
+      tbID: r.tbID ?? "",
       proposal: r.tbName || "",
       client: r.tbMDCustomerID || "",
       owner: r.tbOwner || "",
