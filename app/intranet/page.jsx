@@ -12,7 +12,7 @@ const quickLinks = [
   { title: "Dashboard", desc: "Enterprise PPM dashboard", href: "/dashboard" },
   { title: "IT Help Desk", desc: "Submit and track support tickets", href: "/intranet" },
   { title: "HR & Benefits", desc: "Policies, time off and payroll", href: "/intranet" },
-  { title: "Knowledge Base", desc: "Install guides and runbooks", href: "/intranet" },
+  { title: "Knowledge Base", desc: "Guides, runbooks and customer documentation", href: "/intranet/knowledge-base" },
   { title: "Field Schedule", desc: "Upcoming site installs and visits", href: "/intranet" },
 ];
 
