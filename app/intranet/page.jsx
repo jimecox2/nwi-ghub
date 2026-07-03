@@ -9,7 +9,7 @@ export const metadata = {
 // feeds below are stand-ins until they are wired to real internal data sources.
 const quickLinks = [
   { title: "Proposals", desc: "Proposals currently being worked on", href: "/intranet/proposals" },
-  { title: "Directory", desc: "Staff contacts and extensions", href: "/intranet" },
+  { title: "Dashboard", desc: "Enterprise PPM dashboard", href: "/dashboard" },
   { title: "IT Help Desk", desc: "Submit and track support tickets", href: "/intranet" },
   { title: "HR & Benefits", desc: "Policies, time off and payroll", href: "/intranet" },
   { title: "Knowledge Base", desc: "Install guides and runbooks", href: "/intranet" },
