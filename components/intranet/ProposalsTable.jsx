@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
 import ManageAccessModal from "@/components/intranet/ManageAccessModal";
+import ProjectDetailDrawer from "@/components/intranet/ProjectDetailDrawer";
 
 // Proposals come from the active "Costbars" pubset for the viewer's customer,
 // fetched through the RBAC-gated proxy at /api/dashboard/pubsets/active. The
@@ -53,6 +54,7 @@ export default function ProposalsTable() {
   const [canManage, setCanManage] = useState(false);
   const [showManage, setShowManage] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [detailTbID, setDetailTbID] = useState(null);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -121,6 +123,10 @@ export default function ProposalsTable() {
     />
   ) : null;
 
+  const drawer = detailTbID ? (
+    <ProjectDetailDrawer tbID={detailTbID} onClose={() => setDetailTbID(null)} />
+  ) : null;
+
   function withToolbar(body) {
     return (
       <div>
@@ -132,6 +138,7 @@ export default function ProposalsTable() {
         </div>
         {body}
         {modal}
+        {drawer}
       </div>
     );
   }
@@ -188,7 +195,17 @@ export default function ProposalsTable() {
                 className="px-4 py-3 font-medium text-gray-900"
                 style={{ minWidth: 150, maxWidth: 300 }}
               >
-                {p.proposal || "—"}
+                {p.tbID ? (
+                  <button
+                    type="button"
+                    onClick={() => setDetailTbID(p.tbID)}
+                    className="text-left text-[#0b4d8e] hover:underline"
+                  >
+                    {p.proposal || "—"}
+                  </button>
+                ) : (
+                  p.proposal || "—"
+                )}
               </td>
               <td className="px-4 py-3 text-gray-700">{p.owner || "—"}</td>
               <td className="px-4 py-3 text-gray-700">{p.status || "—"}</td>
