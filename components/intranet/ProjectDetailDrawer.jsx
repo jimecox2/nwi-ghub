@@ -281,7 +281,7 @@ export default function ProjectDetailDrawer({ tbID, onClose }) {
                       <dl className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
                         {scalars.map((f) => (
                           <div key={f.key}>
-                            <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                            <dt className="text-xs font-medium uppercase tracking-wide text-gray-700">
                               {f.label}
                             </dt>
                             <dd className="mt-0.5 text-sm">
@@ -296,7 +296,7 @@ export default function ProjectDetailDrawer({ tbID, onClose }) {
                       <div className={`space-y-4 ${scalars.length > 0 ? "mt-4" : ""}`}>
                         {rich.map((f) => (
                           <div key={f.key}>
-                            <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                            <dt className="text-xs font-medium uppercase tracking-wide text-gray-700">
                               {f.label}
                             </dt>
                             <dd className="mt-1 whitespace-pre-line text-sm leading-relaxed text-gray-800">
