@@ -6,9 +6,10 @@ export const metadata = {
 };
 
 // Mirrors the folder structure under /public/docs. Each customer section maps
-// to a public/docs/customers/<folder> directory; only .pdf files are linked
-// (the sibling .md files are source content, not downloads). Engineering and
-// Vendors have no /public/docs folders yet, so they render as placeholders.
+// to a public/docs/customers/<folder> directory; downloadable files (PDFs,
+// Office docs, etc.) are linked using their filename as the link text, but
+// .md sources are excluded. Engineering and Vendors have no /public/docs
+// folders yet, so they render as placeholders.
 const customers = [
   {
     name: "Fort Frances",
@@ -22,12 +23,17 @@ const customers = [
   {
     name: "North Star Air",
     basePath: "/docs/customers/NorthStarAir",
-    documents: [],
+    documents: [
+      { title: "Phone System Proposal.docx", file: "Phone System Proposal.docx" },
+    ],
   },
   {
     name: "Pickle Lake",
     basePath: "/docs/customers/PickleLake",
-    documents: [],
+    documents: [
+      { title: "PL Business Plan 2003 Rev 0.pdf", file: "PL Business Plan 2003 Rev 0.pdf" },
+      { title: "PL3dLayout.pdf", file: "PL3dLayout.pdf" },
+    ],
   },
 ];
 
@@ -53,7 +59,7 @@ function DownloadsTable({ basePath, documents }) {
               {row.map((doc) => (
                 <td key={doc.file} className="w-1/4 px-4 py-3">
                   <a
-                    href={`${basePath}/${doc.file}`}
+                    href={`${basePath}/${encodeURIComponent(doc.file)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-[#0b4d8e] hover:underline"
