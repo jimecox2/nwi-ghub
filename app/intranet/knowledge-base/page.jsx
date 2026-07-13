@@ -19,6 +19,16 @@ const customers = [
       { title: "Contract", file: "Contract_FortFrances_Wireless.pdf" },
     ],
   },
+  {
+    name: "North Star Air",
+    basePath: "/docs/customers/NorthStarAir",
+    documents: [],
+  },
+  {
+    name: "Pickle Lake",
+    basePath: "/docs/customers/PickleLake",
+    documents: [],
+  },
 ];
 
 const COLUMNS = 4;
@@ -35,7 +45,7 @@ function DownloadsTable({ basePath, documents }) {
   const rows = chunk(documents, COLUMNS);
 
   return (
-    <table className="mt-3 w-full table-fixed border-collapse overflow-hidden rounded-lg border border-gray-200 text-sm">
+    <table className="mt-3 w-full table-fixed border-collapse overflow-hidden rounded-lg border-2 border-[#0b4d8e] text-sm">
       <tbody className="divide-y divide-gray-100 bg-white">
         {rows.length ? (
           rows.map((row, i) => (
@@ -93,7 +103,7 @@ export default function KnowledgeBasePage() {
         </h2>
 
         {customers.map((customer) => (
-          <div key={customer.name} className="mt-6">
+          <div key={customer.name} className="mt-6 pl-6">
             <h3 className="text-base font-semibold text-[#0b4d8e]">{customer.name}</h3>
             <h4 className="mt-3 text-sm font-semibold text-gray-700">Downloads Available</h4>
             <DownloadsTable basePath={customer.basePath} documents={customer.documents} />
