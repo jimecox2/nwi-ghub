@@ -130,6 +130,24 @@ export default function ProjectsTable() {
   function withToolbar(body) {
     return (
       <div>
+        <div className="mb-2 flex items-center gap-4 text-sm">
+          <a
+            href="https://tb.timebars.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-[#0b4d8e] hover:underline"
+          >
+            Timebars
+          </a>
+          <a
+            href="https://cb.timebars.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-[#0b4d8e] hover:underline"
+          >
+            Costbars
+          </a>
+        </div>
         <div className="mb-4 flex items-center justify-between gap-4">
           <p className="text-sm text-gray-500">
             Last published on: {publishedDate ? formatDate(publishedDate) : "—"}
