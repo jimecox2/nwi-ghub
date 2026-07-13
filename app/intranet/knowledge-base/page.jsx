@@ -109,8 +109,11 @@ export default function KnowledgeBasePage() {
         </h2>
 
         {customers.map((customer) => (
-          <div key={customer.name} className="mt-6 pl-6">
-            <h3 className="text-base font-semibold text-[#0b4d8e]">{customer.name}</h3>
+          <div
+            key={customer.name}
+            className="mt-6 ml-6 rounded-lg border border-[#0b4d8e]/30 bg-[#eaf3fb] p-4"
+          >
+            <h3 className="px-2 py-1 text-base font-semibold text-[#0b4d8e]">{customer.name}</h3>
             <h4 className="mt-3 text-sm font-semibold text-gray-700">Downloads Available</h4>
             <DownloadsTable basePath={customer.basePath} documents={customer.documents} />
           </div>
