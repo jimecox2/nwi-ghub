@@ -21,35 +21,45 @@ const customers = [
   },
 ];
 
+const COLUMNS = 4;
+
+function chunk(items, size) {
+  const rows = [];
+  for (let i = 0; i < items.length; i += size) {
+    rows.push(items.slice(i, i + size));
+  }
+  return rows;
+}
+
 function DownloadsTable({ basePath, documents }) {
+  const rows = chunk(documents, COLUMNS);
+
   return (
     <table className="mt-3 w-full table-fixed border-collapse overflow-hidden rounded-lg border border-gray-200 text-sm">
-      <thead className="bg-[#062f57] text-left text-white">
-        <tr>
-          <th className="w-1/2 px-4 py-2 font-semibold">Document</th>
-          <th className="w-1/2 px-4 py-2 font-semibold">Download</th>
-        </tr>
-      </thead>
       <tbody className="divide-y divide-gray-100 bg-white">
-        {documents.length ? (
-          documents.map((doc) => (
-            <tr key={doc.file} className="hover:bg-gray-50">
-              <td className="px-4 py-3 font-medium text-gray-900">{doc.title}</td>
-              <td className="px-4 py-3">
-                <a
-                  href={`${basePath}/${doc.file}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#0b4d8e] hover:underline"
-                >
-                  Download
-                </a>
-              </td>
+        {rows.length ? (
+          rows.map((row, i) => (
+            <tr key={i} className="hover:bg-gray-50">
+              {row.map((doc) => (
+                <td key={doc.file} className="w-1/4 px-4 py-3">
+                  <a
+                    href={`${basePath}/${doc.file}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#0b4d8e] hover:underline"
+                  >
+                    {doc.title}
+                  </a>
+                </td>
+              ))}
+              {Array.from({ length: COLUMNS - row.length }).map((_, j) => (
+                <td key={`empty-${j}`} className="w-1/4 px-4 py-3" />
+              ))}
             </tr>
           ))
         ) : (
           <tr>
-            <td colSpan={2} className="px-4 py-3 text-gray-500">
+            <td colSpan={COLUMNS} className="px-4 py-3 text-gray-500">
               Links coming later&hellip;
             </td>
           </tr>
