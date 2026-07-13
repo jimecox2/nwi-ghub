@@ -18,10 +18,10 @@ export default function ProjectsPage() {
       </nav>
 
       <header className="mt-2">
-        <h1 className="text-3xl font-semibold text-[#062f57]">Projects in Progress</h1>
+        <h1 className="text-3xl font-semibold text-[#062f57]">Projects Proposed</h1>
         <p className="mt-2 max-w-2xl text-gray-600">
-          New projects the team is currently working on, pulled live from your
-          customer&rsquo;s active Costbars pubset.
+          Projects in approval stage the team is currently working on, pulled
+          live from your customer&rsquo;s active Costbars pubset.
         </p>
       </header>
 
