@@ -1,12 +1,12 @@
 import Link from "next/link";
-import ProposalsTable from "@/components/intranet/ProposalsTable";
+import ProjectsTable from "@/components/intranet/ProjectsTable";
 
 export const metadata = {
-  title: "Proposals — Northern Wireless Intranet",
-  description: "Proposals currently being worked on across the team.",
+  title: "Projects — Northern Wireless Intranet",
+  description: "Projects currently being worked on across the team.",
 };
 
-export default function ProposalsPage() {
+export default function ProjectsPage() {
   return (
     <div className="not-prose">
       <nav className="text-sm text-gray-500">
@@ -14,19 +14,19 @@ export default function ProposalsPage() {
           Intranet
         </Link>
         <span className="mx-2">/</span>
-        <span className="text-gray-700">Proposals</span>
+        <span className="text-gray-700">Projects</span>
       </nav>
 
       <header className="mt-2">
-        <h1 className="text-3xl font-semibold text-[#062f57]">Proposals in Progress</h1>
+        <h1 className="text-3xl font-semibold text-[#062f57]">Projects in Progress</h1>
         <p className="mt-2 max-w-2xl text-gray-600">
-          New proposals the team is currently working on, pulled live from your
+          New projects the team is currently working on, pulled live from your
           customer&rsquo;s active Costbars pubset.
         </p>
       </header>
 
       <div className="mt-6">
-        <ProposalsTable />
+        <ProjectsTable />
       </div>
     </div>
   );

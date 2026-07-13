@@ -12,7 +12,7 @@ export const runtime = "nodejs";
 
 // GET /api/dashboard/pubsets/active/project/[tbID]?product=Costbars — the full
 // tbmdjoined row for one Project in the active pubset, for the detail drawer.
-// Same RBAC gate as the proposals list.
+// Same RBAC gate as the projects list.
 export async function GET(request, { params }) {
   const { token, user } = await getSessionContext();
   if (!user) return unauthorized();

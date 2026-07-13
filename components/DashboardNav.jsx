@@ -14,6 +14,8 @@ import {
   User,
   LogOut,
   Home,
+  Building2,
+  LayoutDashboard,
   FolderOpen,
   GitCompare,
   Users,
@@ -206,6 +208,24 @@ export default function DashboardNav() {
                   >
                     <Home className="w-4 h-4" />
                     Back to Main Site
+                  </Link>
+
+                  <Link
+                    href="/intranet"
+                    className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    onClick={closeDropdowns}
+                  >
+                    <Building2 className="w-4 h-4" />
+                    Intranet
+                  </Link>
+
+                  <Link
+                    href="/dashboard"
+                    className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    onClick={closeDropdowns}
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    Dashboard
                   </Link>
 
                   <button

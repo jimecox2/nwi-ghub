@@ -10,17 +10,17 @@ import { hasAccessToPubset, canManagePubsetAccess } from "@/lib/auth/rbac";
 
 export const runtime = "nodejs";
 
-// Proposal = a tbmdjoined Project row whose Status is "New". Field mapping is
+// Project = a tbmdjoined Project row whose Status is "New". Field mapping is
 // applied here so the client only receives the slim rows it renders (and the
 // full pubset payload never leaves the server).
-function toProposals(tbmdjoined) {
+function toProjects(tbmdjoined) {
   return (Array.isArray(tbmdjoined) ? tbmdjoined : [])
     .filter((r) => r.tbType === "Project" && r.tbMDStatus === "New")
     .map((r) => ({
       id: r.tbID ?? `${r.tbName}-${r.tbMDCustomerID}`,
       tbID: r.tbID ?? "",
       projectType: r.tbMDProjectType || "",
-      proposal: r.tbName || "",
+      project: r.tbName || "",
       owner: r.tbOwner || "",
       status: r.tbMDStatus || "",
       stage: r.tbMDStage || "",
@@ -29,7 +29,7 @@ function toProposals(tbmdjoined) {
     }));
 }
 
-// GET /api/dashboard/pubsets/active?product=Costbars — proposals from the active
+// GET /api/dashboard/pubsets/active?product=Costbars — projects from the active
 // pubset for the user's customer + product. RBAC: the viewer must have access to
 // that pubset (owner, matching-customer Administrator, or be granted via
 // grant_pm_access_to / grant_tm_access_to).
@@ -62,7 +62,7 @@ export async function GET(request) {
         published_date: pubset.published_date,
       },
       publishedDate: pubset.published_date,
-      proposals: toProposals(pubset.tbmdjoined),
+      projects: toProjects(pubset.tbmdjoined),
       canManageAccess: canManagePubsetAccess(user, pubset),
     });
   } catch (err) {

@@ -6,10 +6,10 @@ import { useAuthStore } from "@/store/authStore";
 import ManageAccessModal from "@/components/intranet/ManageAccessModal";
 import ProjectDetailDrawer from "@/components/intranet/ProjectDetailDrawer";
 
-// Proposals come from the active "Costbars" pubset for the viewer's customer,
+// Projects come from the active "Costbars" pubset for the viewer's customer,
 // fetched through the RBAC-gated proxy at /api/dashboard/pubsets/active. The
 // route returns rows already filtered to Status = "New" and mapped to columns:
-//   proposal (tbName), client (tbMDCustomerID), owner (tbOwner),
+//   project (tbName), client (tbMDCustomerID), owner (tbOwner),
 //   status (tbMDStatus), stage (tbMDStage), approvalState (tbMDState),
 //   estValue (tbBudgetCost), lastUpdated (tbMDtbLastModified).
 const stageStyles = {
@@ -42,11 +42,11 @@ function formatDate(value) {
   });
 }
 
-export default function ProposalsTable() {
+export default function ProjectsTable() {
   const hydrated = useAuthStore((s) => s.hydrated);
   const user = useAuthStore((s) => s.user);
 
-  const [proposals, setProposals] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [state, setState] = useState("loading"); // loading | ready | unauthenticated | forbidden | empty | error
   const [message, setMessage] = useState("");
   const [pubsetId, setPubsetId] = useState(null);
@@ -72,18 +72,18 @@ export default function ProposalsTable() {
         if (!active) return;
 
         if (res.status === 403 || res.status === 404) {
-          setMessage(data.error || "No proposals available for your account.");
+          setMessage(data.error || "No projects available for your account.");
           setState("forbidden");
           return;
         }
         if (!res.ok) {
-          setMessage(data.error || "Failed to load proposals.");
+          setMessage(data.error || "Failed to load projects.");
           setState("error");
           return;
         }
 
-        const rows = data.proposals || [];
-        setProposals(rows);
+        const rows = data.projects || [];
+        setProjects(rows);
         setPubsetId(data.pubset?.id ?? null);
         setPublishedDate(data.publishedDate ?? null);
         setCanManage(Boolean(data.canManageAccess));
@@ -101,7 +101,7 @@ export default function ProposalsTable() {
     };
   }, [hydrated, user, reloadKey]);
 
-  // The "Manage Access" button is available to admins even when the proposal
+  // The "Manage Access" button is available to admins even when the project
   // list is empty, so it renders above the per-state body below.
   const manageButton =
     canManage && pubsetId ? (
@@ -144,7 +144,7 @@ export default function ProposalsTable() {
   }
 
   if (state === "loading") {
-    return <p className="text-sm text-gray-500">Loading proposals…</p>;
+    return <p className="text-sm text-gray-500">Loading projects…</p>;
   }
   if (state === "unauthenticated") {
     return (
@@ -153,7 +153,7 @@ export default function ProposalsTable() {
         <Link href="/login" className="font-medium text-[#0b4d8e] hover:underline">
           log in
         </Link>{" "}
-        to view proposal data.
+        to view project data.
       </p>
     );
   }
@@ -161,11 +161,11 @@ export default function ProposalsTable() {
     return <p className="text-sm text-gray-600">{message}</p>;
   }
   if (state === "error") {
-    return <p className="text-sm text-red-600">Failed to load proposals: {message}</p>;
+    return <p className="text-sm text-red-600">Failed to load projects: {message}</p>;
   }
   if (state === "empty") {
     return withToolbar(
-      <p className="text-sm text-gray-600">No proposals are currently in progress.</p>
+      <p className="text-sm text-gray-600">No projects are currently in progress.</p>
     );
   }
 
@@ -187,7 +187,7 @@ export default function ProposalsTable() {
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100 bg-white">
-          {proposals.map((p) => (
+          {projects.map((p) => (
             <tr key={p.id} className="hover:bg-gray-50">
               <td className="px-4 py-3 tabular-nums text-gray-500">{p.tbID || "—"}</td>
               <td className="px-4 py-3 text-gray-700">{p.projectType || "—"}</td>
@@ -201,10 +201,10 @@ export default function ProposalsTable() {
                     onClick={() => setDetailTbID(p.tbID)}
                     className="text-left text-[#0b4d8e] hover:underline"
                   >
-                    {p.proposal || "—"}
+                    {p.project || "—"}
                   </button>
                 ) : (
-                  p.proposal || "—"
+                  p.project || "—"
                 )}
               </td>
               <td className="px-4 py-3 text-gray-700">{p.owner || "—"}</td>
