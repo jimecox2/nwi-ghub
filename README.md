@@ -1,5 +1,14 @@
-dddddddddddddddddd
+
 # Cheat sheet
+
+# Standing workflow for tbrunp repo:
+1. Do the requested work on this session's branch. Commit and push it.
+2. After pushing, give me one command to pull that branch into my local VS Code clone for testing.
+3. When I say the session is done, give me one single command that: checks out main, pulls latest, merges this session's branch into main, pushes main, and deletes the branch (remote + local). Fill in the real branch name yourself.
+4. Never reuse a branch after it's merged — always start new work on a fresh branch off current main.
+
+
+
 ## Simple steps deploy prod on lser
 
 git pull
