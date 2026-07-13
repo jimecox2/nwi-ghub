@@ -5,44 +5,57 @@ export const metadata = {
   description: "Internal guides, runbooks and customer documentation.",
 };
 
-// Customer-facing document sets, grouped by engagement. Files are served from
-// /public/docs (paths are URL-encoded because some folders contain spaces).
-const customerDocs = [
+// Mirrors the folder structure under /public/docs. Each customer section maps
+// to a public/docs/customers/<folder> directory; only .pdf files are linked
+// (the sibling .md files are source content, not downloads). Engineering and
+// Vendors have no /public/docs folders yet, so they render as placeholders.
+const customers = [
   {
-    engagement: "Fort Frances — Jam21",
+    name: "Fort Frances",
+    basePath: "/docs/customers/FortFrances",
     documents: [
-      {
-        title: "Business Case",
-        date: "Jun 19, 2026",
-        href: "/docs/business%20case/Business_Case_FortFrances_Wireless.pdf",
-      },
-      {
-        title: "Proposal",
-        date: "Jul 3, 2026",
-        href: "/docs/proposals/Proposal_FortFrances_Wireless.pdf",
-      },
-      {
-        title: "Supply & Install Contract",
-        date: "Jul 17, 2026",
-        href: "/docs/contracts/Contract_FortFrances_Wireless.pdf",
-      },
+      { title: "Business Case", file: "Business_Case_FortFrances_Wireless.pdf" },
+      { title: "Proposal", file: "Proposal_FortFrances_Wireless.pdf" },
+      { title: "Contract", file: "Contract_FortFrances_Wireless.pdf" },
     ],
   },
 ];
 
-function DocIcon() {
+function DownloadsTable({ basePath, documents }) {
   return (
-    <svg
-      className="h-5 w-5 shrink-0 text-[#0b4d8e]"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      aria-hidden="true"
-    >
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" strokeLinejoin="round" />
-      <path d="M14 2v6h6" strokeLinejoin="round" />
-    </svg>
+    <table className="mt-3 w-full table-fixed border-collapse overflow-hidden rounded-lg border border-gray-200 text-sm">
+      <thead className="bg-[#062f57] text-left text-white">
+        <tr>
+          <th className="w-1/2 px-4 py-2 font-semibold">Document</th>
+          <th className="w-1/2 px-4 py-2 font-semibold">Download</th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-gray-100 bg-white">
+        {documents.length ? (
+          documents.map((doc) => (
+            <tr key={doc.file} className="hover:bg-gray-50">
+              <td className="px-4 py-3 font-medium text-gray-900">{doc.title}</td>
+              <td className="px-4 py-3">
+                <a
+                  href={`${basePath}/${doc.file}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#0b4d8e] hover:underline"
+                >
+                  Download
+                </a>
+              </td>
+            </tr>
+          ))
+        ) : (
+          <tr>
+            <td colSpan={2} className="px-4 py-3 text-gray-500">
+              Links coming later&hellip;
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
   );
 }
 
@@ -66,33 +79,32 @@ export default function KnowledgeBasePage() {
 
       <section className="mt-8">
         <h2 className="border-b border-gray-200 pb-2 text-xl font-semibold text-[#062f57]">
-          Customer Documentation
+          Customers
         </h2>
 
-        {customerDocs.map((group) => (
-          <div key={group.engagement} className="mt-6">
-            <h3 className="text-base font-semibold text-[#0b4d8e]">{group.engagement}</h3>
-            <ul className="mt-3 divide-y divide-gray-100 rounded-lg border border-gray-200">
-              {group.documents.map((doc) => (
-                <li key={doc.href}>
-                  <a
-                    href={doc.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 px-4 py-3 transition hover:bg-gray-50"
-                  >
-                    <DocIcon />
-                    <span className="flex-1 font-medium text-gray-900">{doc.title}</span>
-                    <span className="text-sm text-gray-500">{doc.date}</span>
-                    <span className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                      PDF
-                    </span>
-                  </a>
-                </li>
-              ))}
-            </ul>
+        {customers.map((customer) => (
+          <div key={customer.name} className="mt-6">
+            <h3 className="text-base font-semibold text-[#0b4d8e]">{customer.name}</h3>
+            <h4 className="mt-3 text-sm font-semibold text-gray-700">Downloads Available</h4>
+            <DownloadsTable basePath={customer.basePath} documents={customer.documents} />
           </div>
         ))}
+      </section>
+
+      <section className="mt-8">
+        <h2 className="border-b border-gray-200 pb-2 text-xl font-semibold text-[#062f57]">
+          Engineering
+        </h2>
+        <h4 className="mt-4 text-sm font-semibold text-gray-700">Downloads Available</h4>
+        <DownloadsTable basePath="" documents={[]} />
+      </section>
+
+      <section className="mt-8">
+        <h2 className="border-b border-gray-200 pb-2 text-xl font-semibold text-[#062f57]">
+          Vendors
+        </h2>
+        <h4 className="mt-4 text-sm font-semibold text-gray-700">Downloads Available</h4>
+        <DownloadsTable basePath="" documents={[]} />
       </section>
     </div>
   );
