@@ -1,0 +1,27 @@
+Task ID,Work Package,Task Name
+T01,01 Engineering,Contract Award
+T02,01 Engineering,Site Study & Conceptual Design
+T03,01 Engineering,Layout Drawing and BOM
+T04,01 Engineering,Network Design and Config Drwg
+T05,02 Procurement,Order & Deliver Access Points
+T06,02 Procurement,Order & Deliver Smartbridge Modems and Patch Antennas
+T07,02 Procurement,Order & Deliver RF Cabling
+T08,02 Procurement,Order & Deliver Brackets
+T09,02 Procurement,Order and Deliver Amplifiers and Antennas
+T10,02 Procurement,Order and Deliver Computers
+T11,02 Procurement,"Purchase Hub, CAT5 Cable & UPS"
+T12,03 Assembly & Configuration,Assemble Base Stations
+T13,03 Assembly & Configuration,Order Heater & Electrical Components for Base Station
+T14,03 Assembly & Configuration,Base Stations Ready for On the Ground Testing
+T15,04 On the Ground Testing,Ground Assemble and Test Port Inlet System
+T16,04 On the Ground Testing,Ground Assemble and Test Port 2 System
+T17,03 Assembly & Configuration,Configure Computers
+T18,03 Assembly & Configuration,Configure Bandwidth Control Gateway
+T19,04 On the Ground Testing,Ground Assemble and Test Chester Inlet System
+T20,04 On the Ground Testing,All Systems Ready for Shipping to Site
+T21,05 Installation & Testing - Base Station,Install and Test Port Inlet System
+T22,05 Installation & Testing - Base Station,Install and Test Port 2 System
+T23,05 Installation & Testing - Base Station,Install and Test Chester Inlet System
+T24,06 Installation of 50 Premise Modems,Install Port Inlet Premise Equipment
+T25,06 Installation of 50 Premise Modems,Install Port 2 System Premise Equipment
+T26,06 Installation of 50 Premise Modems,Install Chester Inlet Premise Equipment
