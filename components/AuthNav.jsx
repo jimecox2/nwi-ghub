@@ -16,12 +16,12 @@ import {
 
 // Login/Logout control for the nav. Logged out: a Login link. Logged in: the
 // user's email as a dropdown trigger (mirroring the dashboard user menu) with
-// quick links back to the Intranet, Home, Proposals and Dashboard, plus Logout.
+// quick links back to the Intranet, Home, Projects and Dashboard, plus Logout.
 // `onNavigate` lets the mobile menu close itself when an item is tapped.
 const MENU_LINKS = [
   { label: "Intranet", href: "/intranet", icon: Building2 },
   { label: "Home", href: "/", icon: Home },
-  { label: "Proposals", href: "/intranet/proposals", icon: FileText },
+  { label: "Projects", href: "/intranet/projects", icon: FileText },
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
 ];
 

@@ -8,7 +8,7 @@ export const metadata = {
 // Mock intranet landing page. Static placeholder content for now; the cards and
 // feeds below are stand-ins until they are wired to real internal data sources.
 const quickLinks = [
-  { title: "Proposals", desc: "Proposals currently being worked on", href: "/intranet/proposals" },
+  { title: "Projects", desc: "Projects currently being worked on", href: "/intranet/projects" },
   { title: "Dashboard", desc: "Enterprise PPM dashboard", href: "/dashboard" },
   { title: "IT Help Desk", desc: "Submit and track support tickets", href: "/intranet" },
   { title: "HR & Benefits", desc: "Policies, time off and payroll", href: "/intranet" },
@@ -43,7 +43,7 @@ export default function IntranetHome() {
         </p>
         <h1 className="mt-1 text-3xl font-semibold">Company Intranet</h1>
         <p className="mt-2 max-w-2xl text-[#cfe3f5]">
-          Welcome back. Everything the team needs in one place — proposals,
+          Welcome back. Everything the team needs in one place — projects,
           schedules, internal resources and the latest announcements.
         </p>
       </section>
